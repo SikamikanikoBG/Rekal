@@ -7,6 +7,8 @@ export interface ConfigSchema {
   summarizationModel: string;
   language: string;
   ollamaUrl: string;
+  ethicalNotifications: boolean;
+  notificationIntervalMin: number;
   apiKeys: {
     openai?: string;
     anthropic?: string;
@@ -28,6 +30,8 @@ const store = new Store<ConfigSchema>({
     summarizationModel: '',
     language: 'auto',
     ollamaUrl: 'http://localhost:11434',
+    ethicalNotifications: true,
+    notificationIntervalMin: 10,
     apiKeys: {},
   },
 });

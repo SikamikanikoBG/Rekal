@@ -12,6 +12,7 @@ import { ScanResult, Meeting } from '../shared/types';
 import { streamChat, buildChatSystemPrompt } from './chat/stream';
 import { awardXP, getStats, getAchievements, getActiveChallenge, startWeeklyChallenge, updateStreak, getLevelInfo, getXPHistory, checkSpecialAchievement } from './gamification/engine';
 import { logger } from './logging/logger';
+import { announceRecordingStarted, announceRecordingStopped, announceRecordingInProgress } from './audio/tts-notify';
 
 // ── Input Validation Helpers ──
 
@@ -181,6 +182,20 @@ function registerIpcHandlers(): void {
     const filePath = getNewRecordingPath();
     fs.writeFileSync(filePath, Buffer.from(data));
     return filePath;
+  });
+
+  // ── Ethical TTS Notifications ──
+
+  ipcMain.handle('tts:recording-started', async () => {
+    announceRecordingStarted();
+  });
+
+  ipcMain.handle('tts:recording-stopped', async () => {
+    announceRecordingStopped();
+  });
+
+  ipcMain.handle('tts:recording-in-progress', async () => {
+    announceRecordingInProgress();
   });
 
   // ── Transcription (via provider) ──

@@ -9,6 +9,13 @@ contextBridge.exposeInMainWorld('api', {
     return () => ipcRenderer.removeAllListeners('install-progress');
   },
 
+  // Ethical TTS
+  tts: {
+    recordingStarted: () => ipcRenderer.invoke('tts:recording-started'),
+    recordingStopped: () => ipcRenderer.invoke('tts:recording-stopped'),
+    recordingInProgress: () => ipcRenderer.invoke('tts:recording-in-progress'),
+  },
+
   // Config
   getConfig: () => ipcRenderer.invoke('get-config'),
   setConfig: (partial: unknown) => ipcRenderer.invoke('set-config', partial),

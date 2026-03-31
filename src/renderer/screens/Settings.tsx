@@ -27,11 +27,15 @@ export function Settings({ onSave, onBack }: Props) {
   const [ollamaModels, setOllamaModels] = useState<string[]>([]);
   const [selectedModel, setSelectedModel] = useState('');
   const [modelSaved, setModelSaved] = useState(false);
+  const [ethicalNotifications, setEthicalNotifications] = useState(true);
+  const [notificationInterval, setNotificationInterval] = useState(10);
 
   useEffect(() => {
     window.api.getConfig().then((cfg: any) => {
       setKeys(cfg.apiKeys || {});
       setSelectedModel(cfg.summarizationModel || '');
+      setEthicalNotifications(cfg.ethicalNotifications !== false);
+      setNotificationInterval(cfg.notificationIntervalMin || 10);
     });
     window.api.getOllamaUrl().then((url: string) => setOllamaUrl(url));
     loadOllamaModels();
@@ -134,6 +138,55 @@ export function Settings({ onSave, onBack }: Props) {
               ↻
             </button>
             {modelSaved && <span style={styles.savedBadge}>Saved</span>}
+          </div>
+        </div>
+      </Section>
+
+      {/* Ethical Recording Notifications */}
+      <Section title="Ethical Notifications" hint="Voice announcements when recording starts, stops, and periodically during recording. Ensures all meeting participants know they are being recorded — even if the PC is muted.">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <label style={{ fontSize: 13, fontWeight: 500 }}>Enable voice notifications</label>
+          <label style={styles.toggle}>
+            <input
+              type="checkbox"
+              checked={ethicalNotifications}
+              onChange={async (e) => {
+                const val = e.target.checked;
+                setEthicalNotifications(val);
+                await window.api.setConfig({ ethicalNotifications: val });
+              }}
+              style={styles.toggleInput}
+            />
+            <span style={{
+              ...styles.toggleTrack,
+              background: ethicalNotifications ? 'var(--accent)' : 'var(--border)',
+            }}>
+              <span style={{
+                ...styles.toggleThumb,
+                transform: ethicalNotifications ? 'translateX(16px)' : 'translateX(0)',
+              }} />
+            </span>
+          </label>
+        </div>
+        <div style={styles.keyRow}>
+          <label style={styles.keyLabel}>Reminder interval (minutes)</label>
+          <div style={styles.keyInputWrap}>
+            <select
+              value={notificationInterval}
+              onChange={async (e) => {
+                const val = parseInt(e.target.value);
+                setNotificationInterval(val);
+                await window.api.setConfig({ notificationIntervalMin: val });
+              }}
+              style={{ ...styles.keyInput, cursor: 'pointer', maxWidth: 120 }}
+              disabled={!ethicalNotifications}
+            >
+              <option value={0}>Off</option>
+              <option value={5}>5 min</option>
+              <option value={10}>10 min</option>
+              <option value={15}>15 min</option>
+              <option value={30}>30 min</option>
+            </select>
           </div>
         </div>
       </Section>
@@ -271,4 +324,15 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 11, color: 'var(--green)', fontWeight: 600,
   },
   testRow: { display: 'flex', alignItems: 'center', gap: 12, marginTop: 4 },
+  toggle: { position: 'relative' as const, display: 'inline-block', cursor: 'pointer' },
+  toggleInput: { position: 'absolute' as const, opacity: 0, width: 0, height: 0 },
+  toggleTrack: {
+    display: 'inline-block', width: 36, height: 20, borderRadius: 10,
+    transition: 'background 0.2s ease', position: 'relative' as const,
+  },
+  toggleThumb: {
+    display: 'block', width: 16, height: 16, borderRadius: '50%',
+    background: 'white', position: 'absolute' as const, top: 2, left: 2,
+    transition: 'transform 0.2s ease', boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+  },
 };

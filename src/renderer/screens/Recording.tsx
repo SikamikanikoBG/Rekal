@@ -15,11 +15,28 @@ export function Recording({ onStop, onCancel }: Props) {
 
   useEffect(() => {
     startRecording();
+    // Ethical notification: announce recording started
+    window.api.tts.recordingStarted();
+  }, []);
+
+  // Periodic "recording in progress" reminder
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval> | null = null;
+    window.api.getConfig().then((cfg: any) => {
+      if (cfg.ethicalNotifications && cfg.notificationIntervalMin > 0) {
+        interval = setInterval(() => {
+          window.api.tts.recordingInProgress();
+        }, cfg.notificationIntervalMin * 60 * 1000);
+      }
+    });
+    return () => { if (interval) clearInterval(interval); };
   }, []);
 
   async function handleStop() {
     if (stopping) return;
     setStopping(true);
+    // Ethical notification: announce recording stopped
+    window.api.tts.recordingStopped();
     try {
       const blob = await stopRecording();
       // Save blob to file via IPC
@@ -36,6 +53,7 @@ export function Recording({ onStop, onCancel }: Props) {
   }
 
   function handleCancel() {
+    window.api.tts.recordingStopped();
     stopRecording().catch(() => {});
     onCancel();
   }
