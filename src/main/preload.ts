@@ -113,6 +113,14 @@ contextBridge.exposeInMainWorld('api', {
     getXPHistory: (limit?: number) => ipcRenderer.invoke('gamification:xp-history', limit),
   },
 
+  // Usage Costs
+  costs: {
+    save: (record: { meetingId?: string; serviceType: string; provider: string; model: string; inputTokens?: number; outputTokens?: number; audioSeconds?: number; costUsd: number }) =>
+      ipcRenderer.invoke('costs:save', record),
+    forMeeting: (meetingId: string) => ipcRenderer.invoke('costs:meeting', meetingId),
+    summary: () => ipcRenderer.invoke('costs:summary'),
+  },
+
   // MCP Server
   mcp: {
     status: () => ipcRenderer.invoke('mcp:status'),

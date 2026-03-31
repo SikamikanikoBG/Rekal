@@ -100,7 +100,7 @@ export default function App() {
   const setScreen = (screen: Screen) => setState((s) => ({ ...s, screen }));
   const update = (partial: Partial<AppState>) => setState((s) => ({ ...s, ...partial }));
 
-  async function handleProcessingComplete(transcript: any, notes: any) {
+  async function handleProcessingComplete(transcript: any, notes: any, costInfos?: any[]) {
     const id = crypto.randomUUID();
     const title = generateTitle(transcript, notes);
     const date = new Date().toISOString();
@@ -111,6 +111,23 @@ export default function App() {
         audioPath: state.audioPath || '',
         transcript, notes, bookmarks: [],
       });
+      // Save usage costs with the meeting ID
+      if (costInfos && costInfos.length > 0) {
+        for (const ci of costInfos) {
+          try {
+            await window.api.costs.save({
+              meetingId: id,
+              serviceType: ci.serviceType,
+              provider: ci.provider,
+              model: ci.model,
+              inputTokens: ci.inputTokens || 0,
+              outputTokens: ci.outputTokens || 0,
+              audioSeconds: ci.audioSeconds || 0,
+              costUsd: ci.costUsd,
+            });
+          } catch (costErr) { console.error('Failed to save cost:', costErr); }
+        }
+      }
       // Award XP for recording a meeting
       try { await window.api.gamification.awardXP('MEETING_RECORDED', id); } catch (_) {}
     } catch (e) { console.error('Failed to save meeting:', e); }

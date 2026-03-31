@@ -178,3 +178,42 @@ export interface LevelInfo {
   title: string;
   xpRequired: number;
 }
+
+// ── Usage Cost Tracking ──
+
+export interface UsageCostRecord {
+  id: string;
+  meetingId: string | null;
+  serviceType: 'stt' | 'llm';
+  provider: string;
+  model: string;
+  inputTokens: number;
+  outputTokens: number;
+  audioSeconds: number;
+  costUsd: number;
+  createdAt: string;
+}
+
+export interface CostInfo {
+  provider: string;
+  model: string;
+  serviceType: 'stt' | 'llm';
+  inputTokens?: number;
+  outputTokens?: number;
+  audioSeconds?: number;
+  costUsd: number;
+}
+
+export interface CostSummary {
+  today: CostBreakdown;
+  thisWeek: CostBreakdown;
+  thisMonth: CostBreakdown;
+  thisYear: CostBreakdown;
+  allTime: CostBreakdown;
+}
+
+export interface CostBreakdown {
+  total: number;
+  stt: number;
+  llm: number;
+}

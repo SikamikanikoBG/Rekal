@@ -27,12 +27,21 @@ interface ChallengeData {
   expires_at: string;
 }
 
+interface CostSummaryData {
+  today: { total: number; stt: number; llm: number };
+  thisWeek: { total: number; stt: number; llm: number };
+  thisMonth: { total: number; stt: number; llm: number };
+  allTime: { total: number; stt: number; llm: number };
+}
+
 export function Dashboard({ onStartRecording, onViewMeeting }: Props) {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [gamification, setGamification] = useState<GamificationData | null>(null);
   const [challenge, setChallenge] = useState<ChallengeData | null>(null);
   const [meetings, setMeetings] = useState<any[]>([]);
   const [tasks, setTasks] = useState<any[]>([]);
+  const [costSummary, setCostSummary] = useState<CostSummaryData | null>(null);
+  const [costExpanded, setCostExpanded] = useState(false);
 
   useEffect(() => {
     window.api.dashboard.getStats().then(setStats).catch(() => {});
@@ -42,6 +51,7 @@ export function Dashboard({ onStartRecording, onViewMeeting }: Props) {
     window.api.tasks.getAll().then((all: any[]) => {
       setTasks(all.filter((t: any) => !t.done).slice(0, 5));
     }).catch(() => {});
+    window.api.costs.summary().then(setCostSummary).catch(() => {});
   }, []);
 
   const level = gamification?.levelInfo?.level ?? 1;
@@ -164,6 +174,42 @@ export function Dashboard({ onStartRecording, onViewMeeting }: Props) {
               </div>
             </div>
           </Card>
+
+          {/* Usage Costs */}
+          {costSummary && (
+            <Card header="Usage Costs" padding="md">
+              <div style={styles.costGrid}>
+                <CostRow label="Today" amount={costSummary.today.total} />
+                <CostRow label="This Week" amount={costSummary.thisWeek.total} />
+                <CostRow label="This Month" amount={costSummary.thisMonth.total} />
+                <CostRow label="All Time" amount={costSummary.allTime.total} />
+              </div>
+              {costSummary.allTime.total > 0 && (
+                <div
+                  style={styles.costToggle}
+                  onClick={() => setCostExpanded(!costExpanded)}
+                >
+                  <span>{costExpanded ? 'Hide' : 'Show'} breakdown</span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                    style={{ transform: costExpanded ? 'rotate(180deg)' : 'none', transition: 'transform 150ms' }}>
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
+                </div>
+              )}
+              {costExpanded && costSummary.allTime.total > 0 && (
+                <div style={styles.costBreakdownSection}>
+                  <div style={styles.costBreakdownRow}>
+                    <span style={styles.costBreakdownLabel}>STT (all time)</span>
+                    <span style={styles.costBreakdownValue}>${costSummary.allTime.stt.toFixed(2)}</span>
+                  </div>
+                  <div style={styles.costBreakdownRow}>
+                    <span style={styles.costBreakdownLabel}>LLM (all time)</span>
+                    <span style={styles.costBreakdownValue}>${costSummary.allTime.llm.toFixed(2)}</span>
+                  </div>
+                </div>
+              )}
+            </Card>
+          )}
         </div>
       </div>
     </div>

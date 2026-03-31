@@ -1,8 +1,18 @@
 import React, { useState, useEffect } from 'react';
 
+interface CostInfo {
+  provider: string;
+  model: string;
+  serviceType: 'stt' | 'llm';
+  inputTokens?: number;
+  outputTokens?: number;
+  audioSeconds?: number;
+  costUsd: number;
+}
+
 interface Props {
   audioPath: string;
-  onComplete: (transcript: any, notes: any) => void;
+  onComplete: (transcript: any, notes: any, costInfos?: CostInfo[]) => void;
   onError: () => void;
 }
 
@@ -48,6 +58,11 @@ export function Processing({ audioPath, onComplete, onError }: Props) {
         return;
       }
 
+      const costInfos: CostInfo[] = [];
+      if (transcriptResult.costInfo) {
+        costInfos.push(transcriptResult.costInfo);
+      }
+
       // Step 2: Summarize
       setStep('summarizing');
       setProgress(0);
@@ -69,9 +84,13 @@ export function Processing({ audioPath, onComplete, onError }: Props) {
         return;
       }
 
+      if (notesResult.costInfo) {
+        costInfos.push(notesResult.costInfo);
+      }
+
       setStep('done');
       setProgress(100);
-      onComplete(transcriptResult.transcript, notesResult.notes);
+      onComplete(transcriptResult.transcript, notesResult.notes, costInfos);
     } catch (e) {
       setError((e as Error).message || 'An unexpected error occurred');
     }

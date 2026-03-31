@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MeetingChat } from '../components/MeetingChat';
 
 interface Props {
@@ -13,10 +13,28 @@ interface Props {
 
 type Tab = 'summary' | 'actions' | 'transcript' | 'analytics' | 'chat' | 'sentiment' | 'quotes' | 'followups';
 
+interface MeetingCostData {
+  stt: number;
+  llm: number;
+  total: number;
+  records: any[];
+}
+
 export function Results({ transcript, notes, duration, title, date, meetingId, onBack }: Props) {
   const [tab, setTab] = useState<Tab>('summary');
   const [exportOpen, setExportOpen] = useState(false);
   const [copied, setCopied] = useState('');
+  const [costData, setCostData] = useState<MeetingCostData | null>(null);
+
+  useEffect(() => {
+    if (meetingId) {
+      window.api.costs.forMeeting(meetingId).then((records: any[]) => {
+        const stt = records.filter((r: any) => r.serviceType === 'stt').reduce((sum: number, r: any) => sum + r.costUsd, 0);
+        const llm = records.filter((r: any) => r.serviceType === 'llm').reduce((sum: number, r: any) => sum + r.costUsd, 0);
+        setCostData({ stt, llm, total: stt + llm, records });
+      }).catch(() => {});
+    }
+  }, [meetingId]);
 
   function copyMarkdown() {
     navigator.clipboard.writeText(formatAsMarkdown(notes, transcript));
@@ -93,6 +111,17 @@ export function Results({ transcript, notes, duration, title, date, meetingId, o
         </div>
       </div>
 
+      {/* Cost Badge */}
+      {costData && costData.total > 0 && (
+        <div style={styles.costBadge}>
+          <span style={styles.costLabel}>Est. cost:</span>
+          <span style={styles.costValue}>${costData.total.toFixed(4)}</span>
+          <span style={styles.costBreakdown}>
+            (STT: ${costData.stt.toFixed(4)} / LLM: ${costData.llm.toFixed(4)})
+          </span>
+        </div>
+      )}
+
       {/* Tabs */}
       <div style={styles.tabs}>
         {(['summary', 'actions', 'transcript', 'analytics', 'sentiment', 'quotes', 'followups', 'chat'] as Tab[]).map((t) => (
@@ -121,7 +150,7 @@ export function Results({ transcript, notes, duration, title, date, meetingId, o
         {tab === 'summary' && <SummaryTab notes={notes} />}
         {tab === 'actions' && <ActionsTab notes={notes} />}
         {tab === 'transcript' && <TranscriptTab transcript={transcript} />}
-        {tab === 'analytics' && <AnalyticsTab transcript={transcript} notes={notes} duration={duration} />}
+        {tab === 'analytics' && <AnalyticsTab transcript={transcript} notes={notes} duration={duration} costData={costData} />}
         {tab === 'sentiment' && <SentimentTab notes={notes} />}
         {tab === 'quotes' && <QuotesTab notes={notes} />}
         {tab === 'followups' && <FollowUpsTab notes={notes} meetingId={meetingId} />}
@@ -218,7 +247,7 @@ function TranscriptTab({ transcript }: { transcript: any }) {
   );
 }
 
-function AnalyticsTab({ transcript, notes, duration }: { transcript: any; notes: any; duration: number }) {
+function AnalyticsTab({ transcript, notes, duration, costData }: { transcript: any; notes: any; duration: number; costData: MeetingCostData | null }) {
   const segmentCount = transcript?.segments?.length || 0;
   const wordCount = transcript?.segments?.reduce((acc: number, s: any) => acc + (s.text?.split(' ').length || 0), 0) || 0;
   return (
@@ -231,6 +260,26 @@ function AnalyticsTab({ transcript, notes, duration }: { transcript: any; notes:
         <StatCard label="Action Items" value={(notes?.actionItems?.length || 0).toString()} />
         <StatCard label="Words/min" value={duration > 0 ? Math.round(wordCount / (duration / 60)).toString() : '0'} />
       </div>
+
+      {/* Cost Breakdown */}
+      {costData && costData.records.length > 0 && (
+        <section style={{ marginTop: 24 }}>
+          <h3 style={styles.sectionTitle}>Estimated Costs</h3>
+          <div style={styles.statsGrid}>
+            <StatCard label="STT Cost" value={`$${costData.stt.toFixed(4)}`} />
+            <StatCard label="LLM Cost" value={`$${costData.llm.toFixed(4)}`} />
+            <StatCard label="Total Cost" value={`$${costData.total.toFixed(4)}`} />
+          </div>
+          <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column' as const, gap: 4 }}>
+            {costData.records.map((r: any, i: number) => (
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--text-secondary)', padding: '4px 0' }}>
+                <span>{r.serviceType.toUpperCase()} - {r.provider} ({r.model})</span>
+                <span style={{ fontFamily: 'var(--font-mono)' }}>${r.costUsd.toFixed(4)}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
@@ -781,6 +830,15 @@ const styles: Record<string, React.CSSProperties> = {
     flexShrink: 0, marginTop: 2,
   },
   transcriptText: { fontSize: 14, lineHeight: 1.6 },
+  costBadge: {
+    display: 'flex', alignItems: 'center', gap: 8,
+    padding: '6px 12px', marginBottom: 12,
+    background: 'var(--bg-card)', border: '1px solid var(--border-light)',
+    borderRadius: 'var(--radius-sm)', fontSize: 12,
+  },
+  costLabel: { color: 'var(--text-tertiary)', fontWeight: 500 },
+  costValue: { color: 'var(--text-primary)', fontFamily: 'var(--font-mono)', fontWeight: 600 },
+  costBreakdown: { color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)', fontSize: 11 },
   statsGrid: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 },
   statCard: {
     background: 'var(--bg-card)', border: '1px solid var(--border-light)',

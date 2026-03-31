@@ -4,11 +4,13 @@ import * as fs from 'fs';
 import { ChildProcess, fork } from 'child_process';
 import { scanDependencies } from './setup/scanner';
 import { installMissing } from './setup/installer';
-import { initDatabase, saveMeeting, getMeeting, getMeetings, searchMeetings, saveChatMessage, getChatMessages, clearChatMessages, getDashboardStats, getAllTasks, updateMeetingNotes } from './storage/db';
+import { initDatabase, saveMeeting, getMeeting, getMeetings, searchMeetings, saveChatMessage, getChatMessages, clearChatMessages, getDashboardStats, getAllTasks, updateMeetingNotes, saveUsageCost, getMeetingCosts, getCostSummary } from './storage/db';
 import { getNewRecordingPath } from './audio/recorder';
 import { registry } from './providers';
 import { getConfig, setConfig, setApiKey } from './config/store';
-import { ScanResult, Meeting } from '../shared/types';
+import { ScanResult, Meeting, CostInfo } from '../shared/types';
+import { calculateSTTCost, calculateLLMCost, estimateTokens } from './costs/pricing';
+import { buildMeetingNotesPrompt } from './providers/summarization/prompts';
 import { streamChat, buildChatSystemPrompt } from './chat/stream';
 import { awardXP, getStats, getAchievements, getActiveChallenge, startWeeklyChallenge, updateStreak, getLevelInfo, getXPHistory, checkSpecialAchievement } from './gamification/engine';
 import { logger } from './logging/logger';
@@ -216,7 +218,20 @@ function registerIpcHandlers(): void {
         },
       });
       logger.info('Transcription completed', { providerId, model });
-      return { success: true, transcript };
+
+      // Build cost info
+      const resolvedModel = model || (providerId === 'openai-whisper' ? 'whisper-1' : 'local');
+      const audioSeconds = transcript.duration || 0;
+      const costUsd = calculateSTTCost(providerId, resolvedModel, audioSeconds);
+      const costInfo: CostInfo = {
+        provider: providerId,
+        model: resolvedModel,
+        serviceType: 'stt',
+        audioSeconds,
+        costUsd,
+      };
+
+      return { success: true, transcript, costInfo };
     } catch (e) {
       logger.error('Transcription failed', { providerId, model, error: (e as Error).message });
       return { success: false, error: (e as Error).message };
@@ -231,16 +246,37 @@ function registerIpcHandlers(): void {
       // model can be empty — providers have their own defaults
       logger.info('Starting summarization', { providerId, model: model || '(provider default)', language });
       const provider = registry.getSummarization(providerId);
+
+      // Estimate input tokens from the prompt that will be sent
+      const promptText = buildMeetingNotesPrompt(transcript, language);
+      const inputTokens = estimateTokens(promptText);
+
+      let fullResponseText = '';
       const notes = await provider.summarize({
         transcript,
         model,
         language,
         onProgress: (text) => {
+          fullResponseText = text;
           mainWindow?.webContents.send('summary-progress', { text });
         },
       });
       logger.info('Summarization completed', { providerId, model });
-      return { success: true, notes };
+
+      // Build cost info
+      const resolvedModel = model || (providerId === 'openai' ? 'gpt-4o-mini' : providerId === 'claude' ? 'claude-sonnet-4-20250514' : model);
+      const outputTokens = estimateTokens(fullResponseText || JSON.stringify(notes));
+      const costUsd = calculateLLMCost(providerId, resolvedModel, inputTokens, outputTokens);
+      const costInfo: CostInfo = {
+        provider: providerId,
+        model: resolvedModel,
+        serviceType: 'llm',
+        inputTokens,
+        outputTokens,
+        costUsd,
+      };
+
+      return { success: true, notes, costInfo };
     } catch (e) {
       logger.error('Summarization failed', { providerId, model, error: (e as Error).message });
       return { success: false, error: (e as Error).message };
@@ -367,6 +403,20 @@ ${meetingContext || '(No meetings recorded yet)'}`;
 
       // Save assistant response
       saveChatMessage(globalMeetingId, 'assistant', fullResponse);
+
+      // Track chat cost
+      const globalChatInputTokens = estimateTokens(systemPrompt + chatMessages.map(m => m.content).join(''));
+      const globalChatOutputTokens = estimateTokens(fullResponse);
+      const globalChatCostUsd = calculateLLMCost(provider, model, globalChatInputTokens, globalChatOutputTokens);
+      saveUsageCost({
+        meetingId: null,
+        serviceType: 'llm',
+        provider,
+        model: model || provider,
+        inputTokens: globalChatInputTokens,
+        outputTokens: globalChatOutputTokens,
+        costUsd: globalChatCostUsd,
+      });
 
       // Gamification
       awardXP('CHAT_QUESTION');
@@ -499,6 +549,20 @@ ${meetingContext || '(No meetings recorded yet)'}`;
       // Save assistant response
       saveChatMessage(meetingId, 'assistant', fullResponse);
 
+      // Track chat cost
+      const chatInputTokens = estimateTokens(systemPrompt + chatMessages.map(m => m.content).join(''));
+      const chatOutputTokens = estimateTokens(fullResponse);
+      const chatCostUsd = calculateLLMCost(provider, model, chatInputTokens, chatOutputTokens);
+      saveUsageCost({
+        meetingId,
+        serviceType: 'llm',
+        provider,
+        model: model || provider,
+        inputTokens: chatInputTokens,
+        outputTokens: chatOutputTokens,
+        costUsd: chatCostUsd,
+      });
+
       // Gamification: award XP for chat question
       awardXP('CHAT_QUESTION', meetingId);
 
@@ -520,6 +584,24 @@ ${meetingContext || '(No meetings recorded yet)'}`;
     logger.info('Clearing chat history', { meetingId });
     clearChatMessages(meetingId);
     return { success: true };
+  });
+
+  // ── MCP Server ──
+
+  // ── Usage Costs ──
+
+  ipcMain.handle('costs:save', async (_event, record: { meetingId?: string; serviceType: 'stt' | 'llm'; provider: string; model: string; inputTokens?: number; outputTokens?: number; audioSeconds?: number; costUsd: number }) => {
+    saveUsageCost(record);
+    return { success: true };
+  });
+
+  ipcMain.handle('costs:meeting', async (_event, meetingId: string) => {
+    validateId(meetingId, 'meetingId');
+    return getMeetingCosts(meetingId);
+  });
+
+  ipcMain.handle('costs:summary', async () => {
+    return getCostSummary();
   });
 
   // ── MCP Server ──

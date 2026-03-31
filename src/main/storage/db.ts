@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3';
 import * as path from 'path';
 import * as fs from 'fs';
-import { Meeting, ChatMessage } from '../../shared/types';
+import { Meeting, ChatMessage, UsageCostRecord, CostSummary, CostBreakdown } from '../../shared/types';
 
 let db: Database.Database | null = null;
 
@@ -100,6 +100,23 @@ export function initDatabase(): void {
       started_at TEXT DEFAULT (datetime('now')),
       completed_at TEXT,
       expires_at TEXT
+    )
+  `);
+
+  // ── Usage Cost Tracking ──
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS usage_costs (
+      id TEXT PRIMARY KEY,
+      meeting_id TEXT,
+      service_type TEXT NOT NULL,
+      provider TEXT NOT NULL,
+      model TEXT NOT NULL,
+      input_tokens INTEGER DEFAULT 0,
+      output_tokens INTEGER DEFAULT 0,
+      audio_seconds REAL DEFAULT 0,
+      cost_usd REAL DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now'))
     )
   `);
 
@@ -281,6 +298,101 @@ export function getAllTasks(): TaskWithContext[] {
 export function updateMeetingNotes(meetingId: string, notes: any): void {
   if (!db) throw new Error('Database not initialized');
   db.prepare('UPDATE meetings SET notes = ? WHERE id = ?').run(JSON.stringify(notes), meetingId);
+}
+
+// ── Usage Cost Tracking ──
+
+export function saveUsageCost(record: {
+  meetingId?: string | null;
+  serviceType: 'stt' | 'llm';
+  provider: string;
+  model: string;
+  inputTokens?: number;
+  outputTokens?: number;
+  audioSeconds?: number;
+  costUsd: number;
+}): void {
+  if (!db) throw new Error('Database not initialized');
+  const id = crypto.randomUUID();
+  db.prepare(`
+    INSERT INTO usage_costs (id, meeting_id, service_type, provider, model, input_tokens, output_tokens, audio_seconds, cost_usd)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    id,
+    record.meetingId || null,
+    record.serviceType,
+    record.provider,
+    record.model,
+    record.inputTokens || 0,
+    record.outputTokens || 0,
+    record.audioSeconds || 0,
+    record.costUsd,
+  );
+}
+
+export function getMeetingCosts(meetingId: string): UsageCostRecord[] {
+  if (!db) throw new Error('Database not initialized');
+  const rows = db.prepare('SELECT * FROM usage_costs WHERE meeting_id = ? ORDER BY created_at ASC')
+    .all(meetingId) as Array<Record<string, unknown>>;
+  return rows.map(rowToUsageCost);
+}
+
+export function getCostSummary(): CostSummary {
+  if (!db) throw new Error('Database not initialized');
+
+  const now = new Date();
+
+  // Today
+  const todayStr = now.toISOString().split('T')[0];
+
+  // This week (Monday)
+  const dayOfWeek = now.getDay();
+  const mondayOffset = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - mondayOffset);
+  monday.setHours(0, 0, 0, 0);
+  const weekStr = monday.toISOString();
+
+  // This month
+  const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+
+  // This year
+  const yearStr = `${now.getFullYear()}-01-01`;
+
+  function queryBreakdown(whereClause: string, params: unknown[] = []): CostBreakdown {
+    const row = db!.prepare(`
+      SELECT
+        COALESCE(SUM(cost_usd), 0) as total,
+        COALESCE(SUM(CASE WHEN service_type = 'stt' THEN cost_usd ELSE 0 END), 0) as stt,
+        COALESCE(SUM(CASE WHEN service_type = 'llm' THEN cost_usd ELSE 0 END), 0) as llm
+      FROM usage_costs
+      ${whereClause}
+    `).get(...params) as { total: number; stt: number; llm: number };
+    return { total: row.total, stt: row.stt, llm: row.llm };
+  }
+
+  return {
+    today: queryBreakdown('WHERE date(created_at) = date(?)', [todayStr]),
+    thisWeek: queryBreakdown('WHERE created_at >= ?', [weekStr]),
+    thisMonth: queryBreakdown('WHERE date(created_at) >= date(?)', [monthStr]),
+    thisYear: queryBreakdown('WHERE date(created_at) >= date(?)', [yearStr]),
+    allTime: queryBreakdown(''),
+  };
+}
+
+function rowToUsageCost(row: Record<string, unknown>): UsageCostRecord {
+  return {
+    id: row.id as string,
+    meetingId: row.meeting_id as string | null,
+    serviceType: row.service_type as 'stt' | 'llm',
+    provider: row.provider as string,
+    model: row.model as string,
+    inputTokens: row.input_tokens as number,
+    outputTokens: row.output_tokens as number,
+    audioSeconds: row.audio_seconds as number,
+    costUsd: row.cost_usd as number,
+    createdAt: row.created_at as string,
+  };
 }
 
 function rowToChatMessage(row: Record<string, unknown>): ChatMessage {
