@@ -6,18 +6,23 @@ import { MeetingNotes, SentimentData, KeyQuote, FollowUp } from '../../../shared
  * Shared across all summarization providers.
  */
 export function parseMeetingNotes(response: string): MeetingNotes {
+  // Strip markdown code fences if present
+  let cleaned = response.trim();
+  cleaned = cleaned.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '');
+
   // Try JSON first
   try {
-    const jsonMatch = response.match(/\{[\s\S]*\}/);
+    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0]);
-      if (parsed.summary || parsed.actionItems || parsed.action_items) {
+      if (typeof parsed === 'object' && (parsed.summary || parsed.actionItems || parsed.action_items)) {
         return {
           summary: parsed.summary || '',
           actionItems: (parsed.actionItems || parsed.action_items || []).map(
-            (item: string | { text: string }, i: number) => ({
+            (item: string | { text: string; assignee?: string }, i: number) => ({
               id: `ai-${i}`,
               text: typeof item === 'string' ? item : item.text,
+              assignee: typeof item === 'object' ? item.assignee : undefined,
               done: false,
             })
           ),

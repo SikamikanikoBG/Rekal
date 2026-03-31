@@ -204,8 +204,8 @@ function registerIpcHandlers(): void {
     try {
       validateStringArg(providerId, 'providerId');
       validatePath(audioPath, 'audioPath');
-      validateStringArg(model, 'model');
-      logger.info('Starting transcription', { providerId, model, language });
+      // model can be empty — providers have their own defaults
+      logger.info('Starting transcription', { providerId, model: model || '(provider default)', language });
       const provider = registry.getTranscription(providerId);
       const transcript = await provider.transcribe({
         audioPath,
@@ -228,8 +228,8 @@ function registerIpcHandlers(): void {
   ipcMain.handle('summarize', async (_event, providerId: string, transcript, model: string, language?: string) => {
     try {
       validateStringArg(providerId, 'providerId');
-      validateStringArg(model, 'model');
-      logger.info('Starting summarization', { providerId, model, language });
+      // model can be empty — providers have their own defaults
+      logger.info('Starting summarization', { providerId, model: model || '(provider default)', language });
       const provider = registry.getSummarization(providerId);
       const notes = await provider.summarize({
         transcript,
