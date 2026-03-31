@@ -10,28 +10,35 @@ files:
   - dist/**/*
   - resources/**/*
   - whisper-sidecar/**/*
-  - "!node_modules/**/*"
+  - package.json
+
+# Include native modules (better-sqlite3)
+asar: true
+asarUnpack:
+  - "node_modules/better-sqlite3/**/*"
 
 win:
   target:
     - target: nsis
       arch: [x64]
-  icon: resources/icons/icon.ico
+    - target: portable
+      arch: [x64]
+  icon: resources/icons/icon.png
   publisherName: Rekal
-  legalTrademarks: ""
+  signAndEditExecutable: false
 
 nsis:
   oneClick: false
   perMachine: false
   allowToChangeInstallationDirectory: true
-  installerIcon: resources/icons/icon.ico
-  uninstallerIcon: resources/icons/icon.ico
-  installerHeaderIcon: resources/icons/icon.ico
   createDesktopShortcut: true
   createStartMenuShortcut: true
   shortcutName: Rekal
   artifactName: Rekal-Setup-${version}.${ext}
   deleteAppDataOnUninstall: false
+
+portable:
+  artifactName: Rekal-Portable-${version}.${ext}
 
 extraResources:
   - from: whisper-sidecar
@@ -40,11 +47,3 @@ extraResources:
 publish:
   provider: github
   releaseType: release
-
-# File associations (reserved for future use)
-fileAssociations:
-  - ext: ntm
-    name: Rekal Meeting
-    description: Rekal Meeting File
-    mimeType: application/x-rekal-meeting
-    role: Editor
