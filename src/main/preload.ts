@@ -78,16 +78,16 @@ contextBridge.exposeInMainWorld('api', {
 
   // Chat
   chat: {
-    send: (meetingId: string, message: string, provider: string, model: string) =>
-      ipcRenderer.invoke('chat:send', { meetingId, message, provider, model }),
+    send: (meetingId: string, message: string) =>
+      ipcRenderer.invoke('chat:send', { meetingId, message }),
     onToken: (cb: (data: { token: string; done: boolean; error?: string }) => void) => {
       ipcRenderer.on('chat:token', (_e, data) => cb(data));
       return () => ipcRenderer.removeAllListeners('chat:token');
     },
     history: (meetingId: string) => ipcRenderer.invoke('chat:history', meetingId),
     clear: (meetingId: string) => ipcRenderer.invoke('chat:clear', meetingId),
-    sendGlobal: (message: string, provider: string, model: string) =>
-      ipcRenderer.invoke('chat:send-global', { message, provider, model }),
+    sendGlobal: (message: string) =>
+      ipcRenderer.invoke('chat:send-global', { message }),
     onGlobalToken: (cb: (data: { token: string; done: boolean; error?: string }) => void) => {
       ipcRenderer.on('chat:global-token', (_e, data) => cb(data));
       return () => ipcRenderer.removeAllListeners('chat:global-token');

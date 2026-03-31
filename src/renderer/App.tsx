@@ -232,8 +232,6 @@ export default function App() {
                   transcript={state.transcript} notes={state.notes} duration={state.recordingDuration}
                   title={state.meetingTitle || 'Meeting'} date={state.meetingDate || new Date().toISOString()}
                   meetingId={state.currentMeetingId || ''}
-                  summarizationProvider={state.summarizationProvider}
-                  summarizationModel={state.summarizationModel}
                   onBack={() => update({ screen: 'dashboard', activeNav: 'dashboard', transcript: null, notes: null, audioPath: null, currentMeetingId: null, meetingTitle: null, meetingDate: null })}
                 />
               )}
@@ -250,10 +248,7 @@ export default function App() {
                 <Timeline onViewMeeting={handleViewMeeting} />
               )}
               {state.screen === 'globalchat' && (
-                <GlobalChat
-                  summarizationProvider={state.summarizationProvider}
-                  summarizationModel={state.summarizationModel}
-                />
+                <GlobalChat />
               )}
               {state.screen === 'achievements' && (
                 <Achievements />

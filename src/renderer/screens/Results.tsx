@@ -8,14 +8,12 @@ interface Props {
   title: string;
   date: string;
   meetingId: string;
-  summarizationProvider: string;
-  summarizationModel: string;
   onBack: () => void;
 }
 
 type Tab = 'summary' | 'actions' | 'transcript' | 'analytics' | 'chat' | 'sentiment' | 'quotes' | 'followups';
 
-export function Results({ transcript, notes, duration, title, date, meetingId, summarizationProvider, summarizationModel, onBack }: Props) {
+export function Results({ transcript, notes, duration, title, date, meetingId, onBack }: Props) {
   const [tab, setTab] = useState<Tab>('summary');
   const [exportOpen, setExportOpen] = useState(false);
   const [copied, setCopied] = useState('');
@@ -127,7 +125,7 @@ export function Results({ transcript, notes, duration, title, date, meetingId, s
         {tab === 'sentiment' && <SentimentTab notes={notes} />}
         {tab === 'quotes' && <QuotesTab notes={notes} />}
         {tab === 'followups' && <FollowUpsTab notes={notes} meetingId={meetingId} />}
-        {tab === 'chat' && <MeetingChat meetingId={meetingId} provider={summarizationProvider} model={summarizationModel} />}
+        {tab === 'chat' && <MeetingChat meetingId={meetingId} />}
       </div>
     </div>
   );

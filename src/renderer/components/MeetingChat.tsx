@@ -3,8 +3,6 @@ import { ChatMessage } from '../../shared/types';
 
 interface Props {
   meetingId: string;
-  provider: string;
-  model: string;
 }
 
 const SUGGESTED_QUESTIONS = [
@@ -15,7 +13,7 @@ const SUGGESTED_QUESTIONS = [
   'What follow-ups are needed?',
 ];
 
-export function MeetingChat({ meetingId, provider, model }: Props) {
+export function MeetingChat({ meetingId }: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
@@ -88,7 +86,7 @@ export function MeetingChat({ meetingId, provider, model }: Props) {
     setMessages((prev) => [...prev, tempUserMsg]);
 
     try {
-      const result = await window.api.chat.send(meetingId, userMessage, provider, model);
+      const result = await window.api.chat.send(meetingId, userMessage);
       if (!result.success && result.error) {
         setError(result.error);
         setStreaming(false);

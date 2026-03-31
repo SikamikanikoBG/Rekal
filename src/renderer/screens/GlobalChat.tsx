@@ -2,11 +2,6 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { tokens } from '../styles/tokens';
 import { ChatMessage } from '../../shared/types';
 
-interface Props {
-  summarizationProvider: string;
-  summarizationModel: string;
-}
-
 const SUGGESTED_QUESTIONS = [
   'What were my most discussed topics this month?',
   'Show all open action items across meetings',
@@ -15,7 +10,7 @@ const SUGGESTED_QUESTIONS = [
   'What patterns do you see in my meetings?',
 ];
 
-export function GlobalChat({ summarizationProvider, summarizationModel }: Props) {
+export function GlobalChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
@@ -84,7 +79,7 @@ export function GlobalChat({ summarizationProvider, summarizationModel }: Props)
     setMessages((prev) => [...prev, tempUserMsg]);
 
     try {
-      const result = await window.api.chat.sendGlobal(userMessage, summarizationProvider, summarizationModel);
+      const result = await window.api.chat.sendGlobal(userMessage);
       if (!result.success && result.error) {
         setError(result.error);
         setStreaming(false);

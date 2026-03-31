@@ -297,11 +297,12 @@ function registerIpcHandlers(): void {
 
   // ── Global Chat ──
 
-  ipcMain.handle('chat:send-global', async (event, { message, provider, model }: { message: string; provider: string; model: string }) => {
+  ipcMain.handle('chat:send-global', async (event, { message, provider: argProvider, model: argModel }: { message: string; provider?: string; model?: string }) => {
     try {
       validateStringArg(message, 'message');
-      validateStringArg(provider, 'provider');
-      validateStringArg(model, 'model');
+      const cfg = getConfig();
+      const provider = argProvider || cfg.summarizationProvider || 'ollama';
+      const model = argModel || cfg.summarizationModel || '';
       logger.info('Global chat message received', { provider, model });
 
       const globalMeetingId = 'global';
@@ -447,12 +448,13 @@ ${meetingContext || '(No meetings recorded yet)'}`;
 
   // ── Chat ──
 
-  ipcMain.handle('chat:send', async (event, { meetingId, message, provider, model }: { meetingId: string; message: string; provider: string; model: string }) => {
+  ipcMain.handle('chat:send', async (event, { meetingId, message, provider: argProvider, model: argModel }: { meetingId: string; message: string; provider?: string; model?: string }) => {
     try {
       validateId(meetingId, 'meetingId');
       validateStringArg(message, 'message');
-      validateStringArg(provider, 'provider');
-      validateStringArg(model, 'model');
+      const cfg = getConfig();
+      const provider = argProvider || cfg.summarizationProvider || 'ollama';
+      const model = argModel || cfg.summarizationModel || '';
       logger.info('Chat message received', { meetingId, provider, model });
       // Save user message
       saveChatMessage(meetingId, 'user', message);
