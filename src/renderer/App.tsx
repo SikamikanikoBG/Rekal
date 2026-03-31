@@ -80,7 +80,7 @@ function GamificationToastWiring() {
 
 export default function App() {
   const [state, setState] = useState<AppState>({
-    screen: 'setup',
+    screen: 'dashboard',
     activeNav: 'dashboard',
     sidebarCollapsed: false,
     transcriptionProvider: 'whisper-local',

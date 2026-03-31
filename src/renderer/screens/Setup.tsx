@@ -108,6 +108,13 @@ export function Setup({ onComplete }: Props) {
               found: scan.ollamaRunning,
               details: scan.ollamaRunning ? `${scan.ollamaModels.length} model(s) available` : 'Not running',
             }} />
+            <button
+              className="btn btn-ghost"
+              style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 8 }}
+              onClick={() => onComplete()}
+            >
+              Skip — I'm using cloud providers
+            </button>
 
             {error && <p style={styles.error}>{error}</p>}
 
@@ -146,15 +153,6 @@ export function Setup({ onComplete }: Props) {
                   </button>
                 )}
                 <button className="btn btn-ghost" onClick={runScan}>Re-scan</button>
-                {scan.ollamaModels.length > 0 && (
-                  <button
-                    className="btn btn-ghost"
-                    style={{ fontSize: 12, color: 'var(--text-tertiary)' }}
-                    onClick={() => onComplete()}
-                  >
-                    Skip — set up whisper later
-                  </button>
-                )}
               </div>
             )}
           </div>

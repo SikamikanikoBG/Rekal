@@ -228,6 +228,15 @@ function StatCard({ label, value, subtitle, accent }: { label: string; value: nu
   );
 }
 
+function CostRow({ label, amount }: { label: string; amount: number }) {
+  return (
+    <div style={styles.costRow}>
+      <span style={styles.costLabel}>{label}</span>
+      <span style={styles.costAmount}>${amount.toFixed(4)}</span>
+    </div>
+  );
+}
+
 function formatDuration(seconds: number): string {
   const m = Math.floor(seconds / 60);
   if (m < 60) return `${m} min`;
@@ -432,5 +441,34 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: tokens.fontSize.xs,
     color: tokens.colors.textTertiary,
     marginTop: 4,
+  },
+  costGrid: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: tokens.spacing.sm,
+  },
+  costRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    fontSize: tokens.fontSize.sm,
+  },
+  costLabel: {
+    color: tokens.colors.textSecondary,
+  },
+  costAmount: {
+    fontFamily: 'var(--font-mono)',
+    color: tokens.colors.text,
+  },
+  costToggle: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: tokens.spacing.md,
+    paddingTop: tokens.spacing.sm,
+    borderTop: `1px solid ${tokens.colors.borderSubtle}`,
+    cursor: 'pointer',
+    fontSize: tokens.fontSize.xs,
+    color: tokens.colors.textTertiary,
   },
 };

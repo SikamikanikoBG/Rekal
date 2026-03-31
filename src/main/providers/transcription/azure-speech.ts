@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import { net } from 'electron';
 import { TranscriptionProvider, TranscribeRequest } from './types';
 import { Transcript, TranscriptSegment } from '../../../shared/types';
 import { getConfig } from '../../config/store';
@@ -20,7 +21,8 @@ export class AzureSpeechProvider implements TranscriptionProvider {
 
     const url = `https://${region}.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1?language=${lang}&format=detailed`;
 
-    const res = await fetch(url, {
+    console.log('[DEBUG] Azure Speech request', { url, region, audioSize: audioData.length, lang, keyPrefix: key?.substring(0, 6) + '...', keyLength: key?.length });
+    const res = await net.fetch(url, {
       method: 'POST',
       headers: {
         'Ocp-Apim-Subscription-Key': key,
@@ -31,6 +33,7 @@ export class AzureSpeechProvider implements TranscriptionProvider {
 
     if (!res.ok) {
       const error = await res.text();
+      console.log('[DEBUG] Azure Speech 401 details', { status: res.status, body: error, headers: Object.fromEntries(res.headers.entries()) });
       throw new Error(`Azure Speech error (${res.status}): ${error}`);
     }
 

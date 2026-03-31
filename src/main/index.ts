@@ -233,7 +233,7 @@ function registerIpcHandlers(): void {
 
       return { success: true, transcript, costInfo };
     } catch (e) {
-      logger.error('Transcription failed', { providerId, model, error: (e as Error).message });
+      logger.error('Transcription failed', { providerId, model, error: (e as Error).message, cause: (e as any).cause?.message });
       return { success: false, error: (e as Error).message };
     }
   });
@@ -624,6 +624,12 @@ ${meetingContext || '(No meetings recorded yet)'}`;
 
 function setupCSP(): void {
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    // Only apply CSP to renderer pages, not to API requests from net.fetch
+    const isRendererPage = details.url.startsWith('file://') || details.url.startsWith('http://localhost');
+    if (!isRendererPage) {
+      callback({ responseHeaders: details.responseHeaders });
+      return;
+    }
     callback({
       responseHeaders: {
         ...details.responseHeaders,
@@ -631,7 +637,7 @@ function setupCSP(): void {
           "default-src 'self'",
           "script-src 'self'",
           "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-          "connect-src 'self' http://localhost:* https://*.openai.com https://*.anthropic.com https://*.azure.com",
+          "connect-src 'self' http://localhost:* https://*.openai.com https://*.anthropic.com https://*.azure.com https://*.microsoft.com",
           "img-src 'self' data:",
           "font-src 'self' https://fonts.gstatic.com",
         ].join('; ')
@@ -642,8 +648,16 @@ function setupCSP(): void {
 
 // ── App Lifecycle ──
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   logger.info('App starting', { version: app.getVersion(), platform: process.platform });
+
+  // Use system proxy so fetch() works behind corporate proxies
+  const proxyUrl = process.env.HTTPS_PROXY || process.env.HTTP_PROXY || process.env.https_proxy || process.env.http_proxy;
+  if (proxyUrl) {
+    logger.info('Configuring proxy', { proxyUrl });
+    await session.defaultSession.setProxy({ proxyRules: new URL(proxyUrl).host });
+  }
+
   setupCSP();
   initDatabase();
   logger.info('Database initialized');
