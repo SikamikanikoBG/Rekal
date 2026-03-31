@@ -228,6 +228,17 @@ function StatCard({ label, value, subtitle, accent }: { label: string; value: nu
   );
 }
 
+function CostRow({ label, amount }: { label: string; amount: number }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0' }}>
+      <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{label}</span>
+      <span style={{ fontSize: 13, fontWeight: 600, fontFamily: 'var(--font-mono)', color: amount > 0 ? 'var(--text-primary)' : 'var(--text-tertiary)' }}>
+        ${amount.toFixed(2)}
+      </span>
+    </div>
+  );
+}
+
 function formatDuration(seconds: number): string {
   const m = Math.floor(seconds / 60);
   if (m < 60) return `${m} min`;

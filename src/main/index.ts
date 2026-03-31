@@ -1,6 +1,7 @@
-import { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, shell, session } from 'electron';
+import { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, shell, session, protocol, net } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
+import { pathToFileURL } from 'url';
 import { ChildProcess, fork } from 'child_process';
 import { scanDependencies } from './setup/scanner';
 import { installMissing } from './setup/installer';
@@ -107,7 +108,7 @@ function createWindow(): void {
   if (useDevServer) {
     mainWindow.loadURL('http://localhost:5173');
   } else {
-    mainWindow.loadFile(rendererPath);
+    mainWindow.loadURL('app://./index.html');
   }
 
   // Log renderer loading errors
@@ -636,11 +637,11 @@ function setupCSP(): void {
       responseHeaders: {
         ...details.responseHeaders,
         'Content-Security-Policy': [
-          "default-src 'self' file:",
-          "script-src 'self' file:",
-          "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com file:",
+          "default-src 'self' app:",
+          "script-src 'self' app:",
+          "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com app:",
           "connect-src 'self' http://localhost:* https://*.openai.com https://*.anthropic.com https://*.azure.com",
-          "img-src 'self' data: file:",
+          "img-src 'self' data: app:",
           "font-src 'self' https://fonts.gstatic.com",
         ].join('; ')
       }
@@ -650,8 +651,24 @@ function setupCSP(): void {
 
 // ── App Lifecycle ──
 
+// Register custom protocol for serving local files with proper MIME types
+// This enables ES modules to work when loaded from disk
+protocol.registerSchemesAsPrivileged([
+  { scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true } }
+]);
+
 app.whenReady().then(() => {
   logger.info('App starting', { version: app.getVersion(), platform: process.platform });
+
+  // Register file protocol handler
+  protocol.handle('app', (request) => {
+    const rendererDir = path.join(__dirname, '..', '..', 'renderer');
+    let urlPath = new URL(request.url).pathname;
+    // Decode URI and resolve to renderer directory
+    const filePath = path.join(rendererDir, decodeURIComponent(urlPath));
+    return net.fetch(pathToFileURL(filePath).toString());
+  });
+
   setupCSP();
   initDatabase();
   logger.info('Database initialized');
