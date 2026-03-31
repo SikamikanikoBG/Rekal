@@ -13,61 +13,68 @@ export function Processing({ audioPath, onComplete, onError }: Props) {
   const [progress, setProgress] = useState(0);
   const [statusText, setStatusText] = useState('Starting transcription...');
   const [error, setError] = useState('');
+  const [providerInfo, setProviderInfo] = useState({ tProvider: '', tModel: '', sProvider: '', sModel: '' });
 
   useEffect(() => {
     run();
   }, []);
 
   async function run() {
-    // Read providers from config
-    const cfg = await window.api.getConfig();
-    const transcriptionProvider = cfg.transcriptionProvider || 'whisper-local';
-    const transcriptionModel = cfg.transcriptionModel || 'small';
-    const summarizationProvider = cfg.summarizationProvider || 'ollama';
-    const summarizationModel = cfg.summarizationModel || '';
-    const language = cfg.language || 'auto';
-    // Step 1: Transcribe
-    const cleanupTranscript = window.api.onTranscriptionProgress(
-      (data: { percent: number; text: string }) => {
-        setProgress(data.percent);
-        setStatusText(data.text || 'Transcribing...');
+    try {
+      // Read providers from config
+      const cfg = await window.api.getConfig();
+      const transcriptionProvider = cfg.transcriptionProvider || 'whisper-local';
+      const transcriptionModel = cfg.transcriptionModel || 'small';
+      const summarizationProvider = cfg.summarizationProvider || 'ollama';
+      const summarizationModel = cfg.summarizationModel || '';
+      const language = cfg.language || 'auto';
+      setProviderInfo({ tProvider: transcriptionProvider, tModel: transcriptionModel, sProvider: summarizationProvider, sModel: summarizationModel });
+
+      // Step 1: Transcribe
+      const cleanupTranscript = window.api.onTranscriptionProgress(
+        (data: { percent: number; text: string }) => {
+          setProgress(data.percent);
+          setStatusText(data.text || 'Transcribing...');
+        }
+      );
+
+      const transcriptResult = await window.api.transcribe(
+        transcriptionProvider, audioPath, transcriptionModel, language
+      );
+      cleanupTranscript();
+
+      if (!transcriptResult.success) {
+        setError(transcriptResult.error || 'Transcription failed');
+        return;
       }
-    );
 
-    const transcriptResult = await window.api.transcribe(
-      transcriptionProvider, audioPath, transcriptionModel, language
-    );
-    cleanupTranscript();
+      // Step 2: Summarize
+      setStep('summarizing');
+      setProgress(0);
+      setStatusText('Generating meeting notes...');
 
-    if (!transcriptResult.success) {
-      setError(transcriptResult.error);
-      return;
+      const cleanupSummary = window.api.onSummaryProgress((data: { text: string }) => {
+        const words = data.text.split(' ').length;
+        setProgress(Math.min(95, words * 2));
+        setStatusText('Writing notes...');
+      });
+
+      const notesResult = await window.api.summarize(
+        summarizationProvider, transcriptResult.transcript, summarizationModel, language
+      );
+      cleanupSummary();
+
+      if (!notesResult.success) {
+        setError(notesResult.error || 'Summarization failed');
+        return;
+      }
+
+      setStep('done');
+      setProgress(100);
+      onComplete(transcriptResult.transcript, notesResult.notes);
+    } catch (e) {
+      setError((e as Error).message || 'An unexpected error occurred');
     }
-
-    // Step 2: Summarize
-    setStep('summarizing');
-    setProgress(0);
-    setStatusText('Generating meeting notes...');
-
-    const cleanupSummary = window.api.onSummaryProgress((data: { text: string }) => {
-      const words = data.text.split(' ').length;
-      setProgress(Math.min(95, words * 2));
-      setStatusText('Writing notes...');
-    });
-
-    const notesResult = await window.api.summarize(
-      summarizationProvider, transcriptResult.transcript, summarizationModel, language
-    );
-    cleanupSummary();
-
-    if (!notesResult.success) {
-      setError(notesResult.error);
-      return;
-    }
-
-    setStep('done');
-    setProgress(100);
-    onComplete(transcriptResult.transcript, notesResult.notes);
   }
 
   if (error) {
@@ -101,8 +108,8 @@ export function Processing({ audioPath, onComplete, onError }: Props) {
         </div>
         <p style={styles.hint}>
           {step === 'transcribing'
-            ? `Transcribing with ${transcriptionProvider} (${transcriptionModel})...`
-            : `Generating notes with ${summarizationProvider} (${summarizationModel})...`}
+            ? `Transcribing with ${providerInfo.tProvider} (${providerInfo.tModel})...`
+            : `Generating notes with ${providerInfo.sProvider} (${providerInfo.sModel})...`}
         </p>
       </div>
     </div>
