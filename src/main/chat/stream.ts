@@ -1,6 +1,12 @@
 import { getConfig } from '../config/store';
 import { Transcript, MeetingNotes } from '../../shared/types';
 
+const OPENAI_MODELS = ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo'];
+function resolveOpenAIModel(model?: string): string {
+  if (model && OPENAI_MODELS.includes(model)) return model;
+  return 'gpt-4o-mini';
+}
+
 export interface ChatStreamOptions {
   provider: string;
   model: string;
@@ -132,7 +138,7 @@ async function streamOpenAI(
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: model || 'gpt-4o-mini',
+      model: resolveOpenAIModel(model),
       messages: [
         { role: 'system', content: systemPrompt },
         ...messages,

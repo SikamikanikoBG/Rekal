@@ -22,7 +22,7 @@ export class ClaudeProvider implements SummarizationProvider {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: req.model || 'claude-sonnet-4-20250514',
+        model: this.resolveModel(req.model),
         max_tokens: 2048,
         messages: [{ role: 'user', content: prompt }],
         stream: true,
@@ -58,8 +58,15 @@ export class ClaudeProvider implements SummarizationProvider {
     return parseMeetingNotes(fullResponse);
   }
 
+  private readonly MODELS = ['claude-sonnet-4-20250514', 'claude-haiku-4-5-20251001'];
+
+  private resolveModel(model?: string): string {
+    if (model && this.MODELS.includes(model)) return model;
+    return 'claude-sonnet-4-20250514';
+  }
+
   async listModels(): Promise<string[]> {
-    return ['claude-sonnet-4-20250514', 'claude-haiku-4-5-20251001'];
+    return this.MODELS;
   }
 
   async validateConfig(): Promise<{ valid: boolean; error?: string }> {

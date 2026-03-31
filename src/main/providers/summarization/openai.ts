@@ -21,7 +21,7 @@ export class OpenAIProvider implements SummarizationProvider {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: req.model || 'gpt-4o-mini',
+        model: this.resolveModel(req.model),
         messages: [
           { role: 'system', content: 'You are a meeting notes assistant. Respond only with valid JSON.' },
           { role: 'user', content: prompt },
@@ -59,8 +59,15 @@ export class OpenAIProvider implements SummarizationProvider {
     return parseMeetingNotes(fullResponse);
   }
 
+  private readonly MODELS = ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo'];
+
+  private resolveModel(model?: string): string {
+    if (model && this.MODELS.includes(model)) return model;
+    return 'gpt-4o-mini';
+  }
+
   async listModels(): Promise<string[]> {
-    return ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo'];
+    return this.MODELS;
   }
 
   async validateConfig(): Promise<{ valid: boolean; error?: string }> {
