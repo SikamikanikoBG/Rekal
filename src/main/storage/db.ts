@@ -38,14 +38,19 @@ export function initDatabase(): void {
     )
   `);
 
+  // Migrate: drop old chat_messages with FK constraint, recreate without it
+  const chatTableInfo = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='chat_messages'").get() as { sql: string } | undefined;
+  if (chatTableInfo && chatTableInfo.sql.includes('FOREIGN KEY')) {
+    db.exec('DROP TABLE chat_messages');
+  }
+
   db.exec(`
     CREATE TABLE IF NOT EXISTS chat_messages (
       id TEXT PRIMARY KEY,
       meeting_id TEXT NOT NULL,
       role TEXT NOT NULL,
       content TEXT NOT NULL,
-      created_at TEXT DEFAULT (datetime('now')),
-      FOREIGN KEY (meeting_id) REFERENCES meetings(id) ON DELETE CASCADE
+      created_at TEXT DEFAULT (datetime('now'))
     )
   `);
 
