@@ -30,7 +30,7 @@ export class OpenAIWhisperProvider implements TranscriptionProvider {
 
     // Model part
     parts.push(Buffer.from(
-      `--${boundary}\r\nContent-Disposition: form-data; name="model"\r\n\r\n${req.model || 'whisper-1'}\r\n`
+      `--${boundary}\r\nContent-Disposition: form-data; name="model"\r\n\r\nwhisper-1\r\n`
     ));
 
     // Response format
