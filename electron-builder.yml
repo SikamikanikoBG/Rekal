@@ -1,0 +1,50 @@
+appId: com.rekal.app
+productName: Rekal
+copyright: Copyright (c) 2026 Rekal Contributors
+
+directories:
+  output: release
+  buildResources: resources
+
+files:
+  - dist/**/*
+  - resources/**/*
+  - whisper-sidecar/**/*
+  - "!node_modules/**/*"
+
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  icon: resources/icons/icon.ico
+  publisherName: Rekal
+  legalTrademarks: ""
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  installerIcon: resources/icons/icon.ico
+  uninstallerIcon: resources/icons/icon.ico
+  installerHeaderIcon: resources/icons/icon.ico
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Rekal
+  artifactName: Rekal-Setup-${version}.${ext}
+  deleteAppDataOnUninstall: false
+
+extraResources:
+  - from: whisper-sidecar
+    to: whisper-sidecar
+
+publish:
+  provider: github
+  releaseType: release
+
+# File associations (reserved for future use)
+fileAssociations:
+  - ext: ntm
+    name: Rekal Meeting
+    description: Rekal Meeting File
+    mimeType: application/x-rekal-meeting
+    role: Editor

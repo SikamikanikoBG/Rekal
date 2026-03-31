@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rekal — Minimal Design (Mockup A)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+--bg:#FAFAFA;--bg2:#F5F5F5;--bg-el:#FFFFFF;
+--text:#1A1A1A;--text2:#6B7280;--text3:#9CA3AF;
+--accent:#6366F1;--accent-soft:#EEF2FF;--accent-hover:#5558E6;
+--rec:#EF4444;--rec-soft:#FEE2E2;
+--success:#10B981;--warn:#F59E0B;
+--border:#E5E7EB;--border2:#F3F4F6;
+--radius:12px;--radius-sm:8px;--radius-full:9999px;
+--shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+--shadow-lg:0 10px 25px rgba(0,0,0,.07),0 4px 10px rgba(0,0,0,.04);
+--shadow-xl:0 20px 50px rgba(0,0,0,.1);
+--font:'Inter',system-ui,-apple-system,sans-serif;
+--mono:'JetBrains Mono',monospace;
+}
+html{font-size:14px}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+
+/* Title Bar */
+.titlebar{height:40px;background:var(--bg-el);border-bottom:1px solid var(--border2);display:flex;align-items:center;justify-content:space-between;padding:0 16px;position:sticky;top:0;z-index:100;-webkit-app-region:drag}
+.titlebar-title{font-size:12px;font-weight:500;color:var(--text2);letter-spacing:.3px}
+.titlebar-controls{display:flex;gap:8px;-webkit-app-region:no-drag}
+.titlebar-controls span{width:12px;height:12px;border-radius:50%;display:block;opacity:.7}
+.tb-min{background:#FCD34D}.tb-max{background:#6EE7B7}.tb-close{background:#FCA5A5}
+.privacy-badge{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:4px}
+.privacy-badge svg{width:12px;height:12px}
+
+/* Screen Switcher (Dev Navigation) */
+.dev-nav{background:var(--bg-el);border-bottom:1px solid var(--border);padding:8px 24px;display:flex;gap:8px;position:sticky;top:40px;z-index:99}
+.dev-nav button{padding:6px 14px;border:1px solid var(--border);border-radius:var(--radius-full);background:transparent;font-family:var(--font);font-size:12px;font-weight:500;color:var(--text2);cursor:pointer;transition:all .2s}
+.dev-nav button:hover{border-color:var(--accent);color:var(--accent)}
+.dev-nav button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* Main Container */
+.main{max-width:720px;margin:0 auto;padding:48px 24px}
+.screen{display:none;animation:fadeUp .4s ease}
+.screen.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* ===== IDLE SCREEN ===== */
+.idle-hero{text-align:center;padding:40px 0 48px}
+.idle-hero h1{font-size:22px;font-weight:600;color:var(--text);margin-bottom:6px}
+.idle-hero p{font-size:14px;color:var(--text2)}
+.idle-hero .shortcut{font-family:var(--mono);font-size:11px;background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:2px 6px;margin-left:4px}
+
+/* Mic Button */
+.mic-wrap{display:flex;justify-content:center;margin:32px 0 40px}
+.mic-btn{width:88px;height:88px;border-radius:50%;border:none;background:var(--accent);color:#fff;cursor:pointer;position:relative;display:flex;align-items:center;justify-content:center;transition:all .3s cubic-bezier(.34,1.56,.64,1);box-shadow:0 4px 20px rgba(99,102,241,.3)}
+.mic-btn:hover{transform:scale(1.08);box-shadow:0 6px 28px rgba(99,102,241,.4)}
+.mic-btn:active{transform:scale(.96)}
+.mic-btn svg{width:32px;height:32px}
+.mic-btn::after{content:'';position:absolute;inset:-6px;border-radius:50%;border:2px solid var(--accent);opacity:.3;animation:micPulse 2.5s ease-in-out infinite}
+@keyframes micPulse{0%,100%{transform:scale(1);opacity:.3}50%{transform:scale(1.1);opacity:0}}
+
+.mic-btn.recording{background:var(--rec);box-shadow:0 4px 20px rgba(239,68,68,.35)}
+.mic-btn.recording:hover{box-shadow:0 6px 28px rgba(239,68,68,.45)}
+.mic-btn.recording::after{border-color:var(--rec);animation-duration:1.2s}
+
+/* Recent Meetings */
+.section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.section-header h2{font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px}
+.section-header a{font-size:13px;color:var(--accent);text-decoration:none;font-weight:500}
+
+.meeting-card{background:var(--bg-el);border:1px solid var(--border2);border-radius:var(--radius);padding:16px 20px;margin-bottom:8px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:space-between}
+.meeting-card:hover{border-color:var(--border);box-shadow:var(--shadow);transform:translateY(-1px)}
+.meeting-card .mc-left{display:flex;flex-direction:column;gap:4px}
+.meeting-card .mc-title{font-weight:500;font-size:14px}
+.meeting-card .mc-meta{font-size:12px;color:var(--text2);display:flex;align-items:center;gap:8px}
+.meeting-card .mc-meta span{display:flex;align-items:center;gap:3px}
+.meeting-card .mc-tag{font-size:11px;font-weight:500;padding:2px 8px;border-radius:var(--radius-full);background:var(--accent-soft);color:var(--accent)}
+.mc-dur{font-family:var(--mono);font-size:11px;color:var(--text3)}
+
+/* ===== RECORDING SCREEN ===== */
+.recording-screen{text-align:center;padding-top:80px}
+.rec-timer{font-family:var(--mono);font-size:56px;font-weight:600;color:var(--text);letter-spacing:2px;margin-bottom:8px}
+.rec-status{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:40px}
+.rec-dot{width:8px;height:8px;border-radius:50%;background:var(--rec);animation:recBlink 1s ease infinite}
+@keyframes recBlink{0%,100%{opacity:1}50%{opacity:.3}}
+.rec-label{font-size:13px;font-weight:500;color:var(--rec)}
+
+/* Waveform */
+.waveform{display:flex;align-items:center;justify-content:center;gap:3px;height:64px;margin-bottom:48px}
+.waveform .bar{width:3px;border-radius:2px;background:var(--accent);opacity:.6;animation:wave 1.2s ease-in-out infinite}
+.waveform .bar:nth-child(odd){animation-delay:-.3s}
+.waveform .bar:nth-child(3n){animation-delay:-.6s}
+.waveform .bar:nth-child(4n+1){animation-delay:-.15s}
+@keyframes wave{0%,100%{height:8px;opacity:.3}50%{height:var(--h,32px);opacity:.7}}
+
+.rec-actions{display:flex;gap:12px;justify-content:center;align-items:center}
+.rec-actions button{border:none;border-radius:var(--radius-full);font-family:var(--font);font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .2s}
+.btn-bookmark{padding:10px 20px;background:var(--bg-el);border:1px solid var(--border) !important;color:var(--text2);font-size:13px}
+.btn-bookmark:hover{border-color:var(--accent) !important;color:var(--accent)}
+.btn-stop{padding:14px 32px;background:var(--rec);color:#fff;font-size:14px;box-shadow:0 4px 16px rgba(239,68,68,.3)}
+.btn-stop:hover{background:#DC2626;box-shadow:0 6px 20px rgba(239,68,68,.4)}
+.btn-stop svg,.btn-bookmark svg{width:16px;height:16px}
+
+.bookmarks{margin-top:32px}
+.bookmark-item{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--text2);background:var(--bg2);padding:4px 10px;border-radius:var(--radius-full);margin:4px}
+.bookmark-item .bm-time{font-family:var(--mono);color:var(--accent)}
+
+/* ===== PROCESSING SCREEN ===== */
+.processing-screen{text-align:center;padding-top:60px}
+.proc-visual{width:120px;height:120px;margin:0 auto 40px;position:relative}
+.proc-ring{width:100%;height:100%;border-radius:50%;border:3px solid var(--border2);position:absolute;inset:0}
+.proc-ring-fill{width:100%;height:100%;border-radius:50%;border:3px solid transparent;border-top-color:var(--accent);position:absolute;inset:0;animation:spin 1.5s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.proc-icon{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.proc-icon svg{width:28px;height:28px;color:var(--accent)}
+.proc-title{font-size:18px;font-weight:600;margin-bottom:8px}
+.proc-subtitle{font-size:13px;color:var(--text2);margin-bottom:32px}
+
+.proc-steps{max-width:320px;margin:0 auto;text-align:left}
+.proc-step{display:flex;align-items:center;gap:12px;padding:10px 0;position:relative}
+.proc-step::before{content:'';position:absolute;left:11px;top:32px;bottom:-2px;width:2px;background:var(--border2)}
+.proc-step:last-child::before{display:none}
+.proc-step .ps-dot{width:24px;height:24px;min-width:24px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;background:var(--bg);position:relative;z-index:1}
+.proc-step.done .ps-dot{background:var(--success);border-color:var(--success)}
+.proc-step.done .ps-dot svg{display:block}
+.proc-step.active .ps-dot{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.proc-step .ps-dot svg{width:12px;height:12px;color:#fff;display:none}
+.proc-step .ps-label{font-size:13px;color:var(--text3)}
+.proc-step.done .ps-label{color:var(--text2)}
+.proc-step.active .ps-label{color:var(--text);font-weight:500}
+
+.proc-elapsed{font-family:var(--mono);font-size:12px;color:var(--text3);margin-top:24px}
+.proc-bg-btn{margin-top:16px;font-size:12px;color:var(--accent);background:none;border:none;cursor:pointer;font-family:var(--font);text-decoration:underline;text-underline-offset:2px}
+
+/* ===== RESULTS SCREEN ===== */
+.results-header{margin-bottom:28px}
+.results-header h1{font-size:24px;font-weight:600;margin-bottom:6px}
+.results-meta{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.results-meta span{font-size:12px;color:var(--text2);display:flex;align-items:center;gap:4px}
+.results-meta .tag{background:var(--accent-soft);color:var(--accent);padding:2px 8px;border-radius:var(--radius-full);font-weight:500}
+.results-actions{display:flex;gap:8px;margin-top:12px}
+.results-actions button{padding:7px 16px;border-radius:var(--radius-sm);font-family:var(--font);font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:5px}
+.results-actions button svg{width:14px;height:14px}
+.btn-primary{background:var(--accent);color:#fff;border:none}
+.btn-primary:hover{background:var(--accent-hover)}
+.btn-secondary{background:var(--bg);color:var(--text2);border:1px solid var(--border)}
+.btn-secondary:hover{border-color:var(--text3)}
+
+/* Tabs */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:24px}
+.tab-btn{padding:10px 16px;border:none;background:none;font-family:var(--font);font-size:13px;font-weight:500;color:var(--text3);cursor:pointer;position:relative;transition:color .2s}
+.tab-btn:hover{color:var(--text2)}
+.tab-btn.active{color:var(--accent)}
+.tab-btn.active::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:2px;background:var(--accent);border-radius:1px}
+.tab-content{display:none;animation:fadeUp .3s ease}
+.tab-content.active{display:block}
+
+/* Summary Tab */
+.summary-section{margin-bottom:24px}
+.summary-section h3{font-size:14px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.summary-section h3 svg{width:16px;height:16px;color:var(--accent)}
+.summary-text{font-size:14px;line-height:1.7;color:var(--text);background:var(--bg2);border-radius:var(--radius-sm);padding:16px}
+.key-points{list-style:none}
+.key-points li{padding:8px 0;border-bottom:1px solid var(--border2);font-size:14px;line-height:1.6;display:flex;gap:8px}
+.key-points li:last-child{border:none}
+.key-points li::before{content:'';width:6px;min-width:6px;height:6px;border-radius:50%;background:var(--accent);margin-top:8px}
+.decision-tag{display:inline-block;font-size:11px;font-weight:600;padding:2px 6px;border-radius:4px;background:#DBEAFE;color:#2563EB;margin-left:4px}
+
+/* Action Items Tab */
+.action-item{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--border2)}
+.action-item:last-child{border:none}
+.ai-check{width:20px;height:20px;min-width:20px;border-radius:4px;border:2px solid var(--border);cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center}
+.ai-check:hover{border-color:var(--accent)}
+.ai-check.checked{background:var(--success);border-color:var(--success)}
+.ai-check.checked svg{display:block}
+.ai-check svg{width:12px;height:12px;color:#fff;display:none}
+.ai-content{flex:1}
+.ai-text{font-size:14px;margin-bottom:4px}
+.ai-meta{display:flex;gap:8px;font-size:11px;color:var(--text3)}
+.ai-meta .assignee{color:var(--accent);font-weight:500}
+.ai-priority{font-size:10px;font-weight:600;padding:1px 6px;border-radius:var(--radius-full)}
+.ai-priority.high{background:var(--rec-soft);color:var(--rec)}
+.ai-priority.medium{background:#FEF3C7;color:#D97706}
+.ai-priority.low{background:#D1FAE5;color:#059669}
+
+/* Transcript Tab */
+.transcript-line{display:flex;gap:12px;padding:8px 0}
+.tl-time{font-family:var(--mono);font-size:11px;color:var(--text3);min-width:48px;padding-top:2px}
+.tl-speaker{font-size:12px;font-weight:600;min-width:60px;padding-top:1px}
+.tl-speaker.s1{color:#6366F1}.tl-speaker.s2{color:#EC4899}.tl-speaker.s3{color:#F59E0B}
+.tl-text{font-size:14px;line-height:1.6;color:var(--text)}
+.transcript-search{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;margin-bottom:16px;background:var(--bg-el);outline:none;transition:border .2s}
+.transcript-search:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+
+/* Charts Tab */
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.chart-card{background:var(--bg-el);border:1px solid var(--border2);border-radius:var(--radius);padding:20px}
+.chart-card.full-width{grid-column:1/-1}
+.chart-card h3{font-size:13px;font-weight:600;color:var(--text2);margin-bottom:16px}
+
+/* Pie Chart */
+.pie-wrap{display:flex;align-items:center;gap:24px}
+.pie-svg{width:120px;height:120px}
+.pie-legend{display:flex;flex-direction:column;gap:8px}
+.pie-legend-item{display:flex;align-items:center;gap:8px;font-size:12px}
+.pie-legend-item .dot{width:10px;height:10px;border-radius:50%}
+.pie-legend-item .pct{font-family:var(--mono);font-weight:500;min-width:32px}
+
+/* Topic Timeline */
+.topic-timeline{display:flex;flex-direction:column;gap:8px}
+.tt-row{display:flex;align-items:center;gap:10px}
+.tt-label{font-size:12px;color:var(--text2);min-width:80px;text-align:right}
+.tt-bar-bg{flex:1;height:24px;background:var(--bg2);border-radius:4px;position:relative;overflow:hidden}
+.tt-bar{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:8px}
+.tt-bar span{font-size:10px;font-weight:500;color:#fff}
+.tt-dur{font-family:var(--mono);font-size:11px;color:var(--text3);min-width:40px}
+
+/* Stats Row */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+.stat-card{background:var(--bg-el);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:16px;text-align:center}
+.stat-val{font-size:24px;font-weight:600;font-family:var(--mono);color:var(--text)}
+.stat-label{font-size:11px;color:var(--text3);margin-top:2px}
+
+/* Footer */
+.app-footer{text-align:center;padding:40px 0 20px}
+.app-footer span{font-size:11px;color:var(--text3);display:flex;align-items:center;justify-content:center;gap:4px}
+.app-footer svg{width:12px;height:12px}
+
+/* Quick Search Bar */
+.search-trigger{max-width:400px;margin:0 auto 32px;padding:10px 16px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;color:var(--text3);display:flex;align-items:center;gap:8px;cursor:pointer;transition:all .2s;background:var(--bg-el)}
+.search-trigger:hover{border-color:var(--accent);box-shadow:var(--shadow)}
+.search-trigger svg{width:15px;height:15px}
+.search-trigger .sk{margin-left:auto;font-family:var(--mono);font-size:10px;background:var(--bg2);padding:2px 6px;border-radius:4px;border:1px solid var(--border)}
+
+/* Template Selector */
+.template-row{display:flex;gap:8px;justify-content:center;margin-bottom:36px;flex-wrap:wrap}
+.template-pill{padding:6px 14px;border:1px solid var(--border);border-radius:var(--radius-full);font-size:12px;font-weight:500;color:var(--text2);cursor:pointer;transition:all .2s;background:var(--bg-el)}
+.template-pill:hover{border-color:var(--accent);color:var(--accent)}
+.template-pill.selected{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+</style>
+</head>
+<body>
+
+<!-- Title Bar -->
+<div class="titlebar">
+  <div class="privacy-badge">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+    Local AI — your data stays on this device
+  </div>
+  <div class="titlebar-title">Rekal</div>
+  <div class="titlebar-controls"><span class="tb-min"></span><span class="tb-max"></span><span class="tb-close"></span></div>
+</div>
+
+<!-- Dev Navigation -->
+<nav class="dev-nav">
+  <button class="active" onclick="showScreen('idle')">Idle</button>
+  <button onclick="showScreen('recording')">Recording</button>
+  <button onclick="showScreen('processing')">Processing</button>
+  <button onclick="showScreen('results')">Results</button>
+</nav>
+
+<main class="main">
+
+  <!-- ===== IDLE SCREEN ===== -->
+  <section class="screen active" id="screen-idle">
+    <div class="search-trigger">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      Search meetings...
+      <span class="sk">Ctrl+K</span>
+    </div>
+
+    <div class="idle-hero">
+      <h1>Ready to record</h1>
+      <p>Tap the mic or press <span class="shortcut">Ctrl+R</span></p>
+    </div>
+
+    <div class="template-row">
+      <div class="template-pill selected">General</div>
+      <div class="template-pill">Standup</div>
+      <div class="template-pill">1:1</div>
+      <div class="template-pill">Sales Call</div>
+      <div class="template-pill">Sprint Planning</div>
+    </div>
+
+    <div class="mic-wrap">
+      <button class="mic-btn" onclick="showScreen('recording')" aria-label="Start recording">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="1" width="6" height="12" rx="3"/><path d="M19 10v1a7 7 0 01-14 0v-1"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+      </button>
+    </div>
+
+    <div class="section-header">
+      <h2>Recent Meetings</h2>
+      <a href="#">View all</a>
+    </div>
+
+    <div class="meeting-card" onclick="showScreen('results')">
+      <div class="mc-left">
+        <div class="mc-title">Q1 Planning Review</div>
+        <div class="mc-meta">
+          <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Mar 28, 2026</span>
+          <span class="mc-dur">47:12</span>
+          <span class="mc-tag">Sprint Planning</span>
+        </div>
+      </div>
+    </div>
+    <div class="meeting-card">
+      <div class="mc-left">
+        <div class="mc-title">1:1 with Sarah — Performance Review Prep</div>
+        <div class="mc-meta">
+          <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Mar 27, 2026</span>
+          <span class="mc-dur">23:45</span>
+          <span class="mc-tag">1:1</span>
+        </div>
+      </div>
+    </div>
+    <div class="meeting-card">
+      <div class="mc-left">
+        <div class="mc-title">Daily Standup</div>
+        <div class="mc-meta">
+          <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Mar 27, 2026</span>
+          <span class="mc-dur">08:31</span>
+          <span class="mc-tag">Standup</span>
+        </div>
+      </div>
+    </div>
+    <div class="meeting-card">
+      <div class="mc-left">
+        <div class="mc-title">Client Discovery — Acme Corp</div>
+        <div class="mc-meta">
+          <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Mar 26, 2026</span>
+          <span class="mc-dur">35:07</span>
+          <span class="mc-tag">Sales Call</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="app-footer">
+      <span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        All processing happens locally via whisper.cpp + Ollama
+      </span>
+    </div>
+  </section>
+
+  <!-- ===== RECORDING SCREEN ===== -->
+  <section class="screen" id="screen-recording">
+    <div class="recording-screen">
+      <div class="rec-timer" id="rec-timer">12:34</div>
+      <div class="rec-status">
+        <span class="rec-dot"></span>
+        <span class="rec-label">Recording — Mic + System Audio</span>
+      </div>
+
+      <div class="waveform" id="waveform"></div>
+
+      <div class="rec-actions">
+        <button class="btn-bookmark rec-actions-btn" onclick="addBookmark()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+          Bookmark
+        </button>
+        <button class="btn-stop rec-actions-btn" onclick="showScreen('processing')">
+          <svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+          Stop Recording
+        </button>
+      </div>
+
+      <div class="bookmarks" id="bookmarks">
+        <div class="bookmark-item"><span class="bm-time">03:21</span> — Important point</div>
+        <div class="bookmark-item"><span class="bm-time">07:45</span> — Decision made</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PROCESSING SCREEN ===== -->
+  <section class="screen" id="screen-processing">
+    <div class="processing-screen">
+      <div class="proc-visual">
+        <div class="proc-ring"></div>
+        <div class="proc-ring-fill"></div>
+        <div class="proc-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 100 20 10 10 0 000-20z" opacity=".2"/><path d="M12 6v4l3 3"/></svg>
+        </div>
+      </div>
+
+      <h2 class="proc-title">Processing your meeting</h2>
+      <p class="proc-subtitle">This usually takes about a minute</p>
+
+      <div class="proc-steps">
+        <div class="proc-step done">
+          <div class="ps-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <span class="ps-label">Audio processed</span>
+        </div>
+        <div class="proc-step done">
+          <div class="ps-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <span class="ps-label">Speech transcribed — 2,847 words</span>
+        </div>
+        <div class="proc-step active">
+          <div class="ps-dot"></div>
+          <span class="ps-label">Generating summary...</span>
+        </div>
+        <div class="proc-step">
+          <div class="ps-dot"></div>
+          <span class="ps-label">Extracting action items</span>
+        </div>
+        <div class="proc-step">
+          <div class="ps-dot"></div>
+          <span class="ps-label">Building analytics</span>
+        </div>
+      </div>
+
+      <div class="proc-elapsed">Elapsed: <span id="proc-time">24s</span></div>
+      <button class="proc-bg-btn">Continue in background</button>
+    </div>
+  </section>
+
+  <!-- ===== RESULTS SCREEN ===== -->
+  <section class="screen" id="screen-results">
+    <div class="results-header">
+      <h1>Q1 Planning Review</h1>
+      <div class="results-meta">
+        <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> March 28, 2026</span>
+        <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> 47:12</span>
+        <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg> 4 participants</span>
+        <span class="tag">Sprint Planning</span>
+      </div>
+      <div class="results-actions">
+        <button class="btn-primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export</button>
+        <button class="btn-secondary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy</button>
+        <button class="btn-secondary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Share</button>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab('summary')">Summary</button>
+      <button class="tab-btn" onclick="showTab('actions')">Action Items <span style="font-size:10px;background:var(--accent-soft);color:var(--accent);padding:1px 6px;border-radius:9px;margin-left:4px">5</span></button>
+      <button class="tab-btn" onclick="showTab('transcript')">Transcript</button>
+      <button class="tab-btn" onclick="showTab('charts')">Analytics</button>
+    </div>
+
+    <!-- Summary Tab -->
+    <div class="tab-content active" id="tab-summary">
+      <div class="summary-section">
+        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Overview</h3>
+        <div class="summary-text">
+          The team reviewed Q1 progress against OKRs, with engineering at 78% completion and design at 92%. The main discussion centered on the delayed API migration, which is now rescheduled to start April 7. Sarah raised concerns about testing bandwidth, and the team agreed to bring in a contract QA engineer for the sprint. Budget approval for the contractor will come from David by end of week.
+        </div>
+      </div>
+      <div class="summary-section">
+        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Key Points</h3>
+        <ul class="key-points">
+          <li>Engineering OKRs at 78% — on track for Q1 targets with the revised timeline</li>
+          <li>API migration postponed two weeks due to dependency on the auth service refactor <span class="decision-tag">Decision</span></li>
+          <li>Contract QA engineer approved for next sprint to handle increased testing load <span class="decision-tag">Decision</span></li>
+          <li>Design system v2 rollout is ahead of schedule, demo planned for next Friday</li>
+          <li>Customer churn in the SMB segment flagged as a risk — Alex to present analysis next week</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Actions Tab -->
+    <div class="tab-content" id="tab-actions">
+      <div class="action-item">
+        <div class="ai-check" onclick="this.classList.toggle('checked')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="ai-content">
+          <div class="ai-text">Get budget approval for contract QA engineer and send offer letter</div>
+          <div class="ai-meta"><span class="assignee">@David</span><span>Due: Mar 31</span><span class="ai-priority high">High</span></div>
+        </div>
+      </div>
+      <div class="action-item">
+        <div class="ai-check" onclick="this.classList.toggle('checked')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="ai-content">
+          <div class="ai-text">Update the API migration timeline in Jira and notify dependent teams</div>
+          <div class="ai-meta"><span class="assignee">@Marcus</span><span>Due: Mar 30</span><span class="ai-priority high">High</span></div>
+        </div>
+      </div>
+      <div class="action-item">
+        <div class="ai-check" onclick="this.classList.toggle('checked')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="ai-content">
+          <div class="ai-text">Prepare SMB churn analysis presentation for next planning meeting</div>
+          <div class="ai-meta"><span class="assignee">@Alex</span><span>Due: Apr 4</span><span class="ai-priority medium">Medium</span></div>
+        </div>
+      </div>
+      <div class="action-item">
+        <div class="ai-check" onclick="this.classList.toggle('checked')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="ai-content">
+          <div class="ai-text">Schedule design system v2 demo for Friday and send calendar invites</div>
+          <div class="ai-meta"><span class="assignee">@Sarah</span><span>Due: Apr 1</span><span class="ai-priority medium">Medium</span></div>
+        </div>
+      </div>
+      <div class="action-item">
+        <div class="ai-check checked" onclick="this.classList.toggle('checked')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="ai-content">
+          <div class="ai-text">Share the updated Q1 OKR spreadsheet with the full team</div>
+          <div class="ai-meta"><span class="assignee">@You</span><span>Due: Mar 28</span><span class="ai-priority low">Low</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transcript Tab -->
+    <div class="tab-content" id="tab-transcript">
+      <input class="transcript-search" type="text" placeholder="Search transcript... (Ctrl+F)">
+      <div class="transcript-line"><span class="tl-time">00:00</span><span class="tl-speaker s1">You</span><span class="tl-text">Alright, let's get started. Thanks everyone for joining. We've got a packed agenda today — mainly looking at Q1 progress and figuring out where we stand on the big milestones.</span></div>
+      <div class="transcript-line"><span class="tl-time">00:18</span><span class="tl-speaker s2">Sarah</span><span class="tl-text">Sounds good. I actually have an update on the design system rollout if we can squeeze that in.</span></div>
+      <div class="transcript-line"><span class="tl-time">00:24</span><span class="tl-speaker s1">You</span><span class="tl-text">Absolutely, let's add that after the OKR review. Marcus, want to kick us off with engineering?</span></div>
+      <div class="transcript-line"><span class="tl-time">00:31</span><span class="tl-speaker s3">Marcus</span><span class="tl-text">Sure. So engineering is currently at 78% on our Q1 OKRs. The main blocker has been the auth service refactor — it's taken about two weeks longer than we estimated, and that's pushed back the API migration.</span></div>
+      <div class="transcript-line"><span class="tl-time">00:52</span><span class="tl-speaker s1">You</span><span class="tl-text">What's the revised timeline looking like?</span></div>
+      <div class="transcript-line"><span class="tl-time">00:55</span><span class="tl-speaker s3">Marcus</span><span class="tl-text">We're looking at April 7th to start the migration. The auth service should be done by end of this week, then we need a few days for integration testing before we kick off the migration itself.</span></div>
+      <div class="transcript-line"><span class="tl-time">01:12</span><span class="tl-speaker s2">Sarah</span><span class="tl-text">That's going to put a lot of pressure on testing. I'm already concerned about bandwidth — my team is fully allocated with the v2 design system work and the regular sprint tickets.</span></div>
+      <div class="transcript-line"><span class="tl-time">01:28</span><span class="tl-speaker s1">You</span><span class="tl-text">Good point. What if we brought in a contract QA engineer for the sprint? David, is that something the budget could handle?</span></div>
+      <div class="transcript-line"><span class="tl-time">01:38</span><span class="tl-speaker" style="color:#8B5CF6">David</span><span class="tl-text">Let me check the numbers, but I think we have room in the contingency budget. I can confirm by end of week and get an offer letter out if it looks good.</span></div>
+    </div>
+
+    <!-- Charts Tab -->
+    <div class="tab-content" id="tab-charts">
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-val">47:12</div><div class="stat-label">Duration</div></div>
+        <div class="stat-card"><div class="stat-val">2,847</div><div class="stat-label">Words</div></div>
+        <div class="stat-card"><div class="stat-val">4</div><div class="stat-label">Participants</div></div>
+      </div>
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3>Talk Time Distribution</h3>
+          <div class="pie-wrap">
+            <svg class="pie-svg" viewBox="0 0 36 36">
+              <circle cx="18" cy="18" r="15.915" fill="none" stroke="#E5E7EB" stroke-width="3"/>
+              <circle cx="18" cy="18" r="15.915" fill="none" stroke="#6366F1" stroke-width="3.5" stroke-dasharray="35 65" stroke-dashoffset="25" stroke-linecap="round"/>
+              <circle cx="18" cy="18" r="15.915" fill="none" stroke="#EC4899" stroke-width="3.5" stroke-dasharray="28 72" stroke-dashoffset="-10" stroke-linecap="round"/>
+              <circle cx="18" cy="18" r="15.915" fill="none" stroke="#F59E0B" stroke-width="3.5" stroke-dasharray="22 78" stroke-dashoffset="-38" stroke-linecap="round"/>
+              <circle cx="18" cy="18" r="15.915" fill="none" stroke="#8B5CF6" stroke-width="3.5" stroke-dasharray="15 85" stroke-dashoffset="-60" stroke-linecap="round"/>
+            </svg>
+            <div class="pie-legend">
+              <div class="pie-legend-item"><span class="dot" style="background:#6366F1"></span><span class="pct">35%</span> You</div>
+              <div class="pie-legend-item"><span class="dot" style="background:#EC4899"></span><span class="pct">28%</span> Sarah</div>
+              <div class="pie-legend-item"><span class="dot" style="background:#F59E0B"></span><span class="pct">22%</span> Marcus</div>
+              <div class="pie-legend-item"><span class="dot" style="background:#8B5CF6"></span><span class="pct">15%</span> David</div>
+            </div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3>Meeting Stats</h3>
+          <div style="display:flex;flex-direction:column;gap:14px;padding-top:8px">
+            <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="color:var(--text2)">Engagement Score</span><span style="font-weight:600">High</span></div><div style="height:6px;background:var(--bg2);border-radius:3px;overflow:hidden"><div style="height:100%;width:87%;background:var(--success);border-radius:3px"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="color:var(--text2)">Decisions Made</span><span style="font-weight:600">3</span></div><div style="height:6px;background:var(--bg2);border-radius:3px;overflow:hidden"><div style="height:100%;width:60%;background:var(--accent);border-radius:3px"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="color:var(--text2)">Action Items</span><span style="font-weight:600">5</span></div><div style="height:6px;background:var(--bg2);border-radius:3px;overflow:hidden"><div style="height:100%;width:75%;background:var(--warn);border-radius:3px"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="color:var(--text2)">Avg. vs. your meetings</span><span style="font-weight:600">+12 min</span></div><div style="height:6px;background:var(--bg2);border-radius:3px;overflow:hidden"><div style="height:100%;width:68%;background:var(--rec);border-radius:3px;opacity:.7"></div></div></div>
+          </div>
+        </div>
+        <div class="chart-card full-width">
+          <h3>Topic Timeline</h3>
+          <div class="topic-timeline">
+            <div class="tt-row"><span class="tt-label">OKR Review</span><div class="tt-bar-bg"><div class="tt-bar" style="width:38%;background:#6366F1"><span>18 min</span></div></div><div class="tt-dur">38%</div></div>
+            <div class="tt-row"><span class="tt-label">API Migration</span><div class="tt-bar-bg"><div class="tt-bar" style="width:25%;background:#EC4899"><span>12 min</span></div></div><div class="tt-dur">25%</div></div>
+            <div class="tt-row"><span class="tt-label">QA Staffing</span><div class="tt-bar-bg"><div class="tt-bar" style="width:17%;background:#F59E0B"><span>8 min</span></div></div><div class="tt-dur">17%</div></div>
+            <div class="tt-row"><span class="tt-label">Design System</span><div class="tt-bar-bg"><div class="tt-bar" style="width:13%;background:#8B5CF6"><span>6 min</span></div></div><div class="tt-dur">13%</div></div>
+            <div class="tt-row"><span class="tt-label">SMB Churn</span><div class="tt-bar-bg"><div class="tt-bar" style="width:7%;background:#10B981"><span>3 min</span></div></div><div class="tt-dur">7%</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+</main>
+
+<script>
+// Screen navigation
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  document.querySelectorAll('.dev-nav button').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.dev-nav button').forEach(b => {
+    if (b.textContent.trim().toLowerCase().startsWith(name)) b.classList.add('active');
+  });
+}
+
+// Tab navigation
+function showTab(name) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+// Template selection
+document.querySelectorAll('.template-pill').forEach(p => {
+  p.addEventListener('click', () => {
+    document.querySelectorAll('.template-pill').forEach(x => x.classList.remove('selected'));
+    p.classList.add('selected');
+  });
+});
+
+// Generate waveform bars
+const waveform = document.getElementById('waveform');
+for (let i = 0; i < 48; i++) {
+  const bar = document.createElement('div');
+  bar.className = 'bar';
+  bar.style.setProperty('--h', (12 + Math.random() * 36) + 'px');
+  bar.style.animationDelay = (Math.random() * -2) + 's';
+  waveform.appendChild(bar);
+}
+
+// Recording timer
+let recSeconds = 754;
+function updateTimer() {
+  recSeconds++;
+  const m = Math.floor(recSeconds / 60).toString().padStart(2, '0');
+  const s = (recSeconds % 60).toString().padStart(2, '0');
+  document.getElementById('rec-timer').textContent = m + ':' + s;
+}
+setInterval(updateTimer, 1000);
+
+// Processing timer
+let procSeconds = 24;
+setInterval(() => {
+  procSeconds++;
+  document.getElementById('proc-time').textContent = procSeconds + 's';
+}, 1000);
+
+// Bookmark
+function addBookmark() {
+  const m = Math.floor(recSeconds / 60).toString().padStart(2, '0');
+  const s = (recSeconds % 60).toString().padStart(2, '0');
+  const bm = document.createElement('div');
+  bm.className = 'bookmark-item';
+  bm.innerHTML = '<span class="bm-time">' + m + ':' + s + '</span> — Bookmark';
+  document.getElementById('bookmarks').appendChild(bm);
+}
+</script>
+</body>
+</html>

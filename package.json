@@ -1,0 +1,59 @@
+{
+  "name": "rekal",
+  "version": "0.1.0",
+  "description": "Rekal — Total Recall for Your Meetings. Record, transcribe, and summarize meetings 100% locally",
+  "main": "dist/main/main/index.js",
+  "homepage": "./",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/user/rekal.git"
+  },
+  "bugs": {
+    "url": "https://github.com/user/rekal/issues"
+  },
+  "keywords": [
+    "meeting-notes",
+    "transcription",
+    "whisper",
+    "ollama",
+    "local-ai",
+    "electron",
+    "privacy",
+    "mcp",
+    "ai-assistant",
+    "speech-to-text",
+    "meeting-recorder",
+    "offline-first"
+  ],
+  "license": "MIT",
+  "author": "Rekal Contributors",
+  "scripts": {
+    "dev": "concurrently -k \"npm run dev:main\" \"npm run dev:renderer\" \"npm run dev:electron\"",
+    "dev:main": "tsc -p tsconfig.main.json --watch",
+    "dev:renderer": "vite",
+    "dev:electron": "node scripts/wait-and-start.js",
+    "build": "tsc -p tsconfig.main.json && vite build",
+    "start": "npm run build && electron .",
+    "package": "npm run build && electron-builder",
+    "build:mcp": "tsc -p tsconfig.main.json",
+    "mcp": "node dist/main/main/mcp/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "better-sqlite3": "^11.0.0",
+    "electron-store": "^8.2.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.8",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "concurrently": "^8.2.2",
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "typescript": "^5.5.0",
+    "vite": "^5.4.0"
+  }
+}

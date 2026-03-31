@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "rekal": {
+      "command": "node",
+      "args": ["dist/main/main/mcp/index.js"],
+      "cwd": "R:\\Projects\\NoteTaker"
+    }
+  }
+}

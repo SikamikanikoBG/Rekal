@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rekal — Pragmatic MVP</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #111113;
+    --surface: #1a1a1f;
+    --surface-2: #232329;
+    --border: #2e2e36;
+    --text: #e4e4e8;
+    --text-dim: #8a8a96;
+    --text-faint: #5c5c66;
+    --accent: #d44a3a;
+    --accent-glow: rgba(212, 74, 58, 0.15);
+    --green: #3a9a5c;
+    --green-glow: rgba(58, 154, 92, 0.15);
+    --yellow: #c49a2a;
+    --yellow-bg: rgba(196, 154, 42, 0.08);
+    --red-bg: rgba(212, 74, 58, 0.06);
+    --error-red: #e05545;
+    --radius: 8px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ─── Title Bar ─── */
+  .titlebar {
+    height: 38px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 10px;
+    -webkit-app-region: drag;
+    flex-shrink: 0;
+  }
+  .titlebar-dot { width: 11px; height: 11px; border-radius: 50%; }
+  .dot-red { background: #e05545; }
+  .dot-yellow { background: #d4a843; }
+  .dot-green { background: #3a9a5c; }
+  .titlebar-text {
+    font-size: 12px; color: var(--text-dim);
+    margin-left: 8px; font-weight: 500;
+  }
+  .titlebar-version {
+    font-size: 10px; color: var(--text-faint);
+    margin-left: auto; font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ─── State Container ─── */
+  .state { display: none; flex-direction: column; flex: 1; overflow: hidden; }
+  .state.active { display: flex; }
+
+  /* ─── IDLE STATE ─── */
+  .idle-center {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 32px;
+    padding: 40px;
+  }
+  .record-btn {
+    width: 120px; height: 120px; border-radius: 50%;
+    background: var(--accent);
+    border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s ease;
+    box-shadow: 0 0 0 0 var(--accent-glow);
+    position: relative;
+  }
+  .record-btn:hover {
+    transform: scale(1.06);
+    box-shadow: 0 0 0 20px var(--accent-glow);
+  }
+  .record-btn svg { width: 36px; height: 36px; fill: white; }
+  .record-label {
+    font-size: 14px; color: var(--text-dim);
+    text-align: center; line-height: 1.6;
+  }
+  .record-label strong { color: var(--text); font-weight: 600; }
+
+  .audio-select {
+    display: flex; gap: 12px; align-items: center;
+    background: var(--surface); padding: 10px 16px;
+    border-radius: var(--radius); border: 1px solid var(--border);
+  }
+  .audio-select label { font-size: 12px; color: var(--text-dim); white-space: nowrap; }
+  .audio-select select {
+    background: var(--surface-2); color: var(--text); border: 1px solid var(--border);
+    padding: 6px 10px; border-radius: 6px; font-size: 12px;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .past-meetings {
+    position: absolute; bottom: 20px; left: 20px; right: 20px;
+  }
+  .past-label { font-size: 11px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+  .past-list { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+  .past-item {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 10px 14px;
+    min-width: 200px; cursor: pointer; transition: border-color 0.15s;
+  }
+  .past-item:hover { border-color: var(--text-faint); }
+  .past-item-title { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+  .past-item-meta { font-size: 11px; color: var(--text-faint); }
+
+  /* ─── RECORDING STATE ─── */
+  .recording-bar {
+    background: var(--red-bg);
+    border-bottom: 1px solid rgba(212,74,58,0.15);
+    padding: 14px 24px;
+    display: flex; align-items: center; gap: 16px;
+    flex-shrink: 0;
+  }
+  .rec-indicator {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  .rec-time { font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 500; }
+  .rec-status { font-size: 12px; color: var(--text-dim); }
+  .stop-btn {
+    margin-left: auto; background: var(--accent); color: white;
+    border: none; padding: 8px 20px; border-radius: 6px;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: opacity 0.15s;
+  }
+  .stop-btn:hover { opacity: 0.85; }
+
+  .recording-body {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 20px; padding: 40px;
+  }
+  .waveform {
+    display: flex; align-items: center; gap: 3px; height: 60px;
+  }
+  .waveform-bar {
+    width: 4px; background: var(--accent); border-radius: 2px;
+    animation: wave 0.8s ease-in-out infinite;
+  }
+  @keyframes wave {
+    0%, 100% { height: 8px; opacity: 0.3; }
+    50% { height: 40px; opacity: 1; }
+  }
+  .recording-hint {
+    font-size: 13px; color: var(--text-faint); text-align: center; max-width: 360px; line-height: 1.6;
+  }
+
+  /* ─── PROCESSING STATE ─── */
+  .processing-center {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 28px;
+    padding: 40px;
+  }
+  .processing-step {
+    display: flex; align-items: center; gap: 14px;
+    width: 420px; max-width: 100%;
+  }
+  .step-icon {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-size: 14px;
+  }
+  .step-active .step-icon { background: var(--accent-glow); color: var(--accent); }
+  .step-done .step-icon { background: var(--green-glow); color: var(--green); }
+  .step-waiting .step-icon { background: var(--surface-2); color: var(--text-faint); }
+  .step-label { font-size: 14px; font-weight: 500; }
+  .step-waiting .step-label { color: var(--text-faint); }
+  .step-sublabel { font-size: 11px; color: var(--text-faint); margin-top: 2px; font-family: 'JetBrains Mono', monospace; }
+
+  .progress-track {
+    width: 420px; max-width: 100%; height: 4px;
+    background: var(--surface-2); border-radius: 2px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; background: var(--accent); border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+  .progress-time {
+    font-size: 12px; color: var(--text-faint);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ─── RESULTS STATE ─── */
+  .results-layout {
+    flex: 1; display: flex; overflow: hidden;
+  }
+  .results-panel {
+    flex: 1; display: flex; flex-direction: column;
+    border-right: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .results-panel:last-child { border-right: none; }
+  .panel-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .panel-title { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+  .panel-action {
+    font-size: 11px; color: var(--accent); cursor: pointer;
+    background: none; border: none; font-family: 'Inter', sans-serif;
+    font-weight: 500; padding: 4px 8px; border-radius: 4px;
+    transition: background 0.15s;
+  }
+  .panel-action:hover { background: var(--accent-glow); }
+  .panel-body { flex: 1; overflow-y: auto; padding: 16px 20px; }
+
+  /* Transcript */
+  .transcript-line {
+    padding: 6px 8px; border-radius: 4px; font-size: 13.5px;
+    line-height: 1.65; margin-bottom: 2px; cursor: text;
+    transition: background 0.12s;
+  }
+  .transcript-line:hover { background: var(--surface-2); }
+  .transcript-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--text-faint);
+    margin-right: 10px; user-select: none;
+  }
+  .transcript-error {
+    background: var(--yellow-bg);
+    border-left: 2px solid var(--yellow);
+    position: relative;
+  }
+  .transcript-error-word {
+    color: var(--yellow); text-decoration: underline wavy var(--yellow);
+    text-underline-offset: 3px; cursor: pointer;
+    position: relative;
+  }
+  .error-tooltip {
+    display: none; position: absolute;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px; padding: 8px 12px;
+    font-size: 12px; z-index: 10;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    bottom: calc(100% + 6px); left: 0;
+    white-space: nowrap;
+  }
+  .error-tooltip.visible { display: block; }
+  .error-tooltip-label { color: var(--text-faint); margin-bottom: 4px; }
+  .error-tooltip-action {
+    color: var(--accent); cursor: pointer;
+    font-weight: 500;
+  }
+
+  .confidence-badge {
+    display: inline-block; font-size: 10px;
+    padding: 2px 6px; border-radius: 3px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500; margin-left: 6px;
+    vertical-align: middle;
+  }
+  .conf-high { background: var(--green-glow); color: var(--green); }
+  .conf-low { background: var(--yellow-bg); color: var(--yellow); }
+
+  /* Summary */
+  .summary-block { margin-bottom: 20px; }
+  .summary-label {
+    font-size: 11px; color: var(--text-faint);
+    text-transform: uppercase; letter-spacing: 0.08em;
+    margin-bottom: 8px;
+  }
+  .summary-text {
+    font-size: 14px; line-height: 1.7; color: var(--text);
+  }
+  .summary-bullet {
+    padding: 8px 0; padding-left: 16px;
+    position: relative; font-size: 14px; line-height: 1.6;
+  }
+  .summary-bullet::before {
+    content: ''; position: absolute; left: 0; top: 15px;
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--text-faint);
+  }
+  .summary-warning {
+    background: var(--yellow-bg); border: 1px solid rgba(196,154,42,0.15);
+    border-radius: var(--radius); padding: 12px 16px;
+    font-size: 12px; color: var(--yellow);
+    display: flex; align-items: flex-start; gap: 10px; margin-top: 16px;
+  }
+  .summary-warning svg { flex-shrink: 0; margin-top: 1px; }
+
+  .copy-bar {
+    padding: 12px 20px; border-top: 1px solid var(--border);
+    display: flex; gap: 8px; flex-shrink: 0;
+  }
+  .copy-btn {
+    flex: 1; padding: 10px; border-radius: 6px;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    border: 1px solid var(--border); background: var(--surface-2);
+    color: var(--text); transition: all 0.15s;
+  }
+  .copy-btn:hover { border-color: var(--text-faint); }
+  .copy-btn-primary {
+    background: var(--accent); border-color: var(--accent); color: white;
+  }
+  .copy-btn-primary:hover { opacity: 0.85; border-color: var(--accent); }
+
+  /* ─── ERROR STATES ─── */
+  .error-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6); z-index: 100;
+    align-items: center; justify-content: center;
+  }
+  .error-overlay.active { display: flex; }
+  .error-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 32px; max-width: 440px;
+    width: 90%; text-align: center;
+  }
+  .error-icon {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: var(--red-bg); border: 1px solid rgba(212,74,58,0.15);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px;
+  }
+  .error-icon svg { width: 24px; height: 24px; }
+  .error-title { font-size: 17px; font-weight: 600; margin-bottom: 8px; }
+  .error-desc { font-size: 13px; color: var(--text-dim); line-height: 1.6; margin-bottom: 20px; }
+  .error-code {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    background: var(--surface-2); padding: 10px 14px; border-radius: 6px;
+    color: var(--text-faint); margin-bottom: 20px; text-align: left;
+  }
+  .error-actions { display: flex; gap: 8px; justify-content: center; }
+  .error-btn {
+    padding: 10px 20px; border-radius: 6px; font-size: 13px;
+    font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif;
+    border: 1px solid var(--border); background: var(--surface-2);
+    color: var(--text); transition: all 0.15s;
+  }
+  .error-btn:hover { border-color: var(--text-faint); }
+  .error-btn-primary { background: var(--accent); border-color: var(--accent); color: white; }
+  .error-btn-primary:hover { opacity: 0.85; }
+
+  /* ─── Tab bar for error demos ─── */
+  .demo-bar {
+    background: var(--surface); border-top: 1px solid var(--border);
+    padding: 8px 16px; display: flex; gap: 6px;
+    flex-shrink: 0; flex-wrap: wrap;
+  }
+  .demo-btn {
+    font-size: 11px; padding: 5px 12px; border-radius: 4px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    color: var(--text-dim); cursor: pointer; font-family: 'Inter', sans-serif;
+    font-weight: 500; transition: all 0.15s;
+  }
+  .demo-btn:hover { color: var(--text); border-color: var(--text-faint); }
+  .demo-btn.active { color: var(--accent); border-color: var(--accent); background: var(--accent-glow); }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-faint); }
+</style>
+</head>
+<body>
+
+<!-- Title Bar -->
+<div class="titlebar">
+  <div class="titlebar-dot dot-red"></div>
+  <div class="titlebar-dot dot-yellow"></div>
+  <div class="titlebar-dot dot-green"></div>
+  <span class="titlebar-text">Rekal</span>
+  <span class="titlebar-version">v0.1.0-mvp</span>
+</div>
+
+<!-- ═══════ STATE 1: IDLE ═══════ -->
+<div class="state active" id="state-idle">
+  <div class="idle-center">
+    <div>
+      <button class="record-btn" id="btn-record" title="Start recording">
+        <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+      </button>
+    </div>
+    <div class="record-label">
+      <strong>Press to record a meeting</strong><br>
+      Captures microphone and system audio
+    </div>
+    <div class="audio-select">
+      <label>Mic:</label>
+      <select>
+        <option>Realtek HD Audio (Default)</option>
+        <option>Jabra Evolve2 75</option>
+      </select>
+      <label style="margin-left: 8px;">System audio:</label>
+      <select>
+        <option>Stereo Mix (Realtek)</option>
+        <option>WASAPI Loopback</option>
+      </select>
+    </div>
+    <div class="past-meetings" style="position: relative;">
+      <div class="past-label">Recent</div>
+      <div class="past-list">
+        <div class="past-item" onclick="showState('results')">
+          <div class="past-item-title">Sprint Planning #42</div>
+          <div class="past-item-meta">Mar 28 - 34 min - 87% accuracy</div>
+        </div>
+        <div class="past-item">
+          <div class="past-item-title">Design Review</div>
+          <div class="past-item-meta">Mar 27 - 51 min - 82% accuracy</div>
+        </div>
+        <div class="past-item">
+          <div class="past-item-title">1:1 with Alex</div>
+          <div class="past-item-meta">Mar 26 - 22 min - 91% accuracy</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ STATE 2: RECORDING ═══════ -->
+<div class="state" id="state-recording">
+  <div class="recording-bar">
+    <div class="rec-indicator"></div>
+    <span class="rec-time" id="rec-timer">00:00</span>
+    <span class="rec-status">Recording - mic + system audio</span>
+    <button class="stop-btn" id="btn-stop">Stop & Process</button>
+  </div>
+  <div class="recording-body">
+    <div class="waveform" id="waveform"></div>
+    <div class="recording-hint">
+      Your meeting is being recorded locally.<br>
+      Audio never leaves this machine.<br><br>
+      <span style="color: var(--yellow);">Reminder: Ensure all participants have consented to recording.</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ STATE 3: PROCESSING ═══════ -->
+<div class="state" id="state-processing">
+  <div class="processing-center">
+    <div class="processing-step step-done" id="step-save">
+      <div class="step-icon"><svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg></div>
+      <div>
+        <div class="step-label">Audio saved</div>
+        <div class="step-sublabel">34 min recording - 82 MB</div>
+      </div>
+    </div>
+    <div class="processing-step step-active" id="step-transcribe">
+      <div class="step-icon"><svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><circle cx="8" cy="8" r="3"><animate attributeName="opacity" values="1;0.3;1" dur="1.2s" repeatCount="indefinite"/></circle></svg></div>
+      <div>
+        <div class="step-label">Transcribing with whisper.cpp</div>
+        <div class="step-sublabel" id="transcribe-progress">~2 min remaining for 34 min audio</div>
+      </div>
+    </div>
+    <div class="processing-step step-waiting" id="step-summarize">
+      <div class="step-icon">3</div>
+      <div>
+        <div class="step-label">Summarize with local LLM</div>
+        <div class="step-sublabel">Waiting for transcript</div>
+      </div>
+    </div>
+    <div style="width: 420px; max-width: 100%;">
+      <div class="progress-track">
+        <div class="progress-fill" id="progress-bar" style="width: 35%"></div>
+      </div>
+      <div style="display: flex; justify-content: space-between; margin-top: 8px;">
+        <span class="progress-time" id="progress-text">Transcribing... 35%</span>
+        <span class="progress-time">ETA ~1:45</span>
+      </div>
+    </div>
+    <div style="font-size: 12px; color: var(--text-faint); text-align: center; max-width: 380px; line-height: 1.6; margin-top: 12px;">
+      Using whisper-medium model on CPU.<br>
+      RAM usage: ~3.2 GB. Your laptop may be warm. This is normal.
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ STATE 4: RESULTS ═══════ -->
+<div class="state" id="state-results">
+  <div class="results-layout">
+    <!-- Left: Transcript -->
+    <div class="results-panel" style="flex: 1.2;">
+      <div class="panel-header">
+        <span class="panel-title">Transcript</span>
+        <div style="display: flex; gap: 6px; align-items: center;">
+          <span class="confidence-badge conf-low">87% avg</span>
+          <button class="panel-action" onclick="copyTranscript()">Copy all</button>
+        </div>
+      </div>
+      <div class="panel-body" id="transcript-body">
+        <div class="transcript-line">
+          <span class="transcript-time">0:00</span>
+          Alright, let's get started everyone. Thanks for joining the sprint planning.
+        </div>
+        <div class="transcript-line">
+          <span class="transcript-time">0:12</span>
+          So last sprint we closed 34 story points out of the planned 40. Pretty good but we had some carryover on the API migration.
+        </div>
+        <div class="transcript-line transcript-error">
+          <span class="transcript-time">0:28</span>
+          Yeah the <span class="transcript-error-word" onclick="showTooltip(this)">eye pee eye<span class="error-tooltip" id="tooltip-1"><div class="error-tooltip-label">Low confidence (62%) - click to edit</div><div class="error-tooltip-action">Probably: "API"</div></span></span> migration is about 80% done, we just need to finish the <span class="transcript-error-word" onclick="showTooltip(this)">off indication<span class="error-tooltip"><div class="error-tooltip-label">Low confidence (58%) - click to edit</div><div class="error-tooltip-action">Probably: "authentication"</div></span></span> endpoints.
+          <span class="confidence-badge conf-low">62%</span>
+        </div>
+        <div class="transcript-line">
+          <span class="transcript-time">0:45</span>
+          Makes sense. What's the priority for this sprint then?
+        </div>
+        <div class="transcript-line transcript-error">
+          <span class="transcript-time">0:52</span>
+          I think we should focus on the <span class="transcript-error-word" onclick="showTooltip(this)">cue barnetties<span class="error-tooltip"><div class="error-tooltip-label">Low confidence (41%) - click to edit</div><div class="error-tooltip-action">Probably: "Kubernetes"</div></span></span> deployment and the <span class="transcript-error-word" onclick="showTooltip(this)">see eye see D pipeline<span class="error-tooltip"><div class="error-tooltip-label">Low confidence (55%) - click to edit</div><div class="error-tooltip-action">Probably: "CI/CD pipeline"</div></span></span>.
+          <span class="confidence-badge conf-low">48%</span>
+        </div>
+        <div class="transcript-line">
+          <span class="transcript-time">1:08</span>
+          Agreed. Sarah, can you take the deployment ticket? You had context from the infrastructure work last sprint.
+        </div>
+        <div class="transcript-line">
+          <span class="transcript-time">1:18</span>
+          Sure, I'll pick that up. Should have the staging environment ready by Wednesday.
+        </div>
+        <div class="transcript-line transcript-error">
+          <span class="transcript-time">1:30</span>
+          Great. And for the <span class="transcript-error-word" onclick="showTooltip(this)">day to base<span class="error-tooltip"><div class="error-tooltip-label">Low confidence (67%) - click to edit</div><div class="error-tooltip-action">Probably: "database"</div></span></span> migration, Raj, where are we on that?
+          <span class="confidence-badge conf-low">67%</span>
+        </div>
+        <div class="transcript-line">
+          <span class="transcript-time">1:42</span>
+          <span style="color: var(--text-faint); font-style: italic;">[cross-talk, 3 seconds - unable to transcribe]</span>
+        </div>
+        <div class="transcript-line">
+          <span class="transcript-time">1:45</span>
+          Sorry, go ahead Raj.
+        </div>
+        <div class="transcript-line">
+          <span class="transcript-time">1:48</span>
+          The migration scripts are written but I want to run them against a copy of production data first. That'll take probably two days if I can get access to the snapshot.
+        </div>
+        <div class="transcript-line">
+          <span class="transcript-time">2:05</span>
+          OK, I'll ping DevOps to get you that snapshot today. Let's plan for migration Wednesday or Thursday then.
+        </div>
+        <div class="transcript-line">
+          <span class="transcript-time">2:18</span>
+          One more thing - we got a P1 bug report from the sales team about the export function. It's dropping rows when the dataset is over 10k.
+        </div>
+        <div class="transcript-line transcript-error">
+          <span class="transcript-time">2:32</span>
+          That's the <span class="transcript-error-word" onclick="showTooltip(this)">pagination bug<span class="error-tooltip"><div class="error-tooltip-label">Confidence: 73% - probably correct</div></span></span> we've been tracking. I can hotfix that today, it's a known issue with the <span class="transcript-error-word" onclick="showTooltip(this)">sequel light<span class="error-tooltip"><div class="error-tooltip-label">Low confidence (59%) - click to edit</div><div class="error-tooltip-action">Probably: "SQLite"</div></span></span> cursor.
+          <span class="confidence-badge conf-low">66%</span>
+        </div>
+        <div style="padding: 20px 8px; text-align: center; color: var(--text-faint); font-size: 12px; border-top: 1px solid var(--border); margin-top: 16px;">
+          [ Transcript continues... 34 minutes total ]<br>
+          <span style="color: var(--yellow);">6 low-confidence segments flagged for review</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Summary -->
+    <div class="results-panel">
+      <div class="panel-header">
+        <span class="panel-title">Summary</span>
+        <button class="panel-action" onclick="copySummary()">Copy</button>
+      </div>
+      <div class="panel-body">
+        <div class="summary-block">
+          <div class="summary-label">Key Points</div>
+          <div class="summary-bullet">Last sprint closed 34/40 story points, with carryover on the API migration (80% done, authentication endpoints remaining).</div>
+          <div class="summary-bullet">This sprint's priorities: Kubernetes deployment and CI/CD pipeline setup.</div>
+          <div class="summary-bullet">Database migration scripts ready but need production data snapshot for testing. Target: Wednesday or Thursday.</div>
+          <div class="summary-bullet">P1 bug in export function (drops rows over 10k records) - SQLite cursor pagination issue, hotfix planned today.</div>
+        </div>
+
+        <div class="summary-block">
+          <div class="summary-label">Who Does What</div>
+          <div class="summary-bullet"><strong>Sarah</strong> - Kubernetes deployment, staging environment by Wednesday</div>
+          <div class="summary-bullet"><strong>Raj</strong> - Database migration after getting prod data snapshot</div>
+          <div class="summary-bullet"><strong>[Unknown]</strong> - Ping DevOps for snapshot access today</div>
+          <div class="summary-bullet"><strong>[Unknown]</strong> - Hotfix export pagination bug today</div>
+        </div>
+
+        <div class="summary-warning">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5a.75.75 0 01.65.38l6.25 10.75a.75.75 0 01-.65 1.12H1.75a.75.75 0 01-.65-1.12L7.35 1.88A.75.75 0 018 1.5zM7.25 10v1.5h1.5V10h-1.5zm0-5v3.5h1.5V5h-1.5z"/></svg>
+          <div>
+            <strong>Honesty notice:</strong> This summary was generated by a 7B local model from a transcript with 87% average confidence. 2 action item owners could not be identified. Review the transcript for accuracy.
+          </div>
+        </div>
+      </div>
+
+      <div class="copy-bar">
+        <button class="copy-btn" onclick="copyMarkdown()">Copy as Markdown</button>
+        <button class="copy-btn copy-btn-primary" onclick="copyPlain()">Copy Plain Text</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ ERROR: Ollama Not Running ═══════ -->
+<div class="error-overlay" id="error-ollama">
+  <div class="error-card">
+    <div class="error-icon">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e05545" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+    </div>
+    <div class="error-title">Ollama is not running</div>
+    <div class="error-desc">
+      Rekal needs Ollama to generate summaries. The transcription completed successfully, but we can't summarize without the local LLM.
+    </div>
+    <div class="error-code">
+      $ ollama serve<br>
+      Error: connection refused on localhost:11434<br><br>
+      Fix: Open a terminal and run "ollama serve"<br>
+      Then run "ollama pull mistral" if not already downloaded
+    </div>
+    <div class="error-actions">
+      <button class="error-btn" onclick="closeError('error-ollama')">Skip summary</button>
+      <button class="error-btn error-btn-primary" onclick="closeError('error-ollama')">Retry connection</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ ERROR: Mic Access Denied ═══════ -->
+<div class="error-overlay" id="error-mic">
+  <div class="error-card">
+    <div class="error-icon">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e05545" stroke-width="2"><path d="M12 1v13M9 4v6a3 3 0 006 0V4"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+    </div>
+    <div class="error-title">Microphone access denied</div>
+    <div class="error-desc">
+      Windows has blocked microphone access for Rekal. This is often due to enterprise IT policies or Windows privacy settings.
+    </div>
+    <div class="error-code">
+      Settings > Privacy & Security > Microphone<br>
+      Ensure "Microphone access" is ON<br>
+      Ensure "Rekal" is in the allowed apps list<br><br>
+      If managed by your organization, contact IT support.
+    </div>
+    <div class="error-actions">
+      <button class="error-btn" onclick="closeError('error-mic')">Cancel</button>
+      <button class="error-btn error-btn-primary" onclick="closeError('error-mic')">Open Settings</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ ERROR: Out of RAM ═══════ -->
+<div class="error-overlay" id="error-ram">
+  <div class="error-card">
+    <div class="error-icon">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e05545" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="6" y1="10" x2="6" y2="14"/><line x1="10" y1="10" x2="10" y2="14"/><line x1="14" y1="10" x2="14" y2="14"/></svg>
+    </div>
+    <div class="error-title">Not enough memory</div>
+    <div class="error-desc">
+      Your system has 5.2 GB available but transcription + summarization needs approximately 8 GB. Processing may be extremely slow or crash.
+    </div>
+    <div class="error-code">
+      Available RAM: 5.2 GB / 16 GB<br>
+      Teams.exe: 1.8 GB | Chrome: 3.4 GB | Other: 5.6 GB<br><br>
+      Suggestion: Close Chrome tabs or use whisper-small model<br>
+      (lower accuracy but ~2 GB less RAM)
+    </div>
+    <div class="error-actions">
+      <button class="error-btn" onclick="closeError('error-ram')">Use smaller model</button>
+      <button class="error-btn error-btn-primary" onclick="closeError('error-ram')">Try anyway</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ Demo Navigation ═══════ -->
+<div class="demo-bar">
+  <span style="font-size: 11px; color: var(--text-faint); padding: 5px 0;">Demo states:</span>
+  <button class="demo-btn active" onclick="showState('idle')">Idle</button>
+  <button class="demo-btn" onclick="showState('recording')">Recording</button>
+  <button class="demo-btn" onclick="showState('processing')">Processing</button>
+  <button class="demo-btn" onclick="showState('results')">Results</button>
+  <span style="font-size: 11px; color: var(--text-faint); padding: 5px 8px;">Errors:</span>
+  <button class="demo-btn" onclick="showError('error-ollama')">No Ollama</button>
+  <button class="demo-btn" onclick="showError('error-mic')">Mic Denied</button>
+  <button class="demo-btn" onclick="showError('error-ram')">Low RAM</button>
+</div>
+
+<script>
+  // ─── State management ───
+  function showState(name) {
+    document.querySelectorAll('.state').forEach(s => s.classList.remove('active'));
+    document.getElementById('state-' + name).classList.add('active');
+    document.querySelectorAll('.demo-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+
+    if (name === 'recording') startTimer();
+    if (name === 'processing') startProgress();
+  }
+
+  // ─── Recording ───
+  let timerInterval;
+  let seconds = 0;
+
+  function startTimer() {
+    clearInterval(timerInterval);
+    seconds = 0;
+    const timerEl = document.getElementById('rec-timer');
+    timerInterval = setInterval(() => {
+      seconds++;
+      const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+      const s = (seconds % 60).toString().padStart(2, '0');
+      timerEl.textContent = m + ':' + s;
+    }, 1000);
+  }
+
+  // Build waveform bars
+  (function() {
+    const wf = document.getElementById('waveform');
+    for (let i = 0; i < 40; i++) {
+      const bar = document.createElement('div');
+      bar.className = 'waveform-bar';
+      bar.style.animationDelay = (i * 0.06) + 's';
+      bar.style.animationDuration = (0.5 + Math.random() * 0.8) + 's';
+      wf.appendChild(bar);
+    }
+  })();
+
+  // ─── Record button ───
+  document.getElementById('btn-record').addEventListener('click', () => showState('recording'));
+  document.getElementById('btn-stop').addEventListener('click', () => {
+    clearInterval(timerInterval);
+    showState('processing');
+  });
+
+  // ─── Processing simulation ───
+  let progressInterval;
+  function startProgress() {
+    clearInterval(progressInterval);
+    let pct = 0;
+    const bar = document.getElementById('progress-bar');
+    const text = document.getElementById('progress-text');
+    const step2 = document.getElementById('step-transcribe');
+    const step3 = document.getElementById('step-summarize');
+    const sub = document.getElementById('transcribe-progress');
+
+    step2.className = 'processing-step step-active';
+    step3.className = 'processing-step step-waiting';
+
+    progressInterval = setInterval(() => {
+      pct += Math.random() * 3 + 0.5;
+      if (pct > 100) pct = 100;
+
+      bar.style.width = pct + '%';
+
+      if (pct < 75) {
+        const remaining = Math.max(0, Math.round((100 - pct) / 100 * 120));
+        text.textContent = 'Transcribing... ' + Math.round(pct) + '%';
+        sub.textContent = '~' + Math.floor(remaining / 60) + ':' + (remaining % 60).toString().padStart(2, '0') + ' remaining';
+      } else if (pct < 100) {
+        step2.className = 'processing-step step-done';
+        step2.querySelector('.step-icon').innerHTML = '<svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg>';
+        step3.className = 'processing-step step-active';
+        step3.querySelector('.step-icon').innerHTML = '<svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><circle cx="8" cy="8" r="3"><animate attributeName="opacity" values="1;0.3;1" dur="1.2s" repeatCount="indefinite"/></circle></svg>';
+        step3.querySelector('.step-sublabel').textContent = 'Generating summary with mistral-7b...';
+        text.textContent = 'Summarizing... ' + Math.round(pct) + '%';
+      }
+
+      if (pct >= 100) {
+        clearInterval(progressInterval);
+        text.textContent = 'Done!';
+        setTimeout(() => showState('results'), 600);
+      }
+    }, 300);
+  }
+
+  // ─── Tooltip ───
+  function showTooltip(el) {
+    const tooltip = el.querySelector('.error-tooltip');
+    document.querySelectorAll('.error-tooltip.visible').forEach(t => t.classList.remove('visible'));
+    if (tooltip) tooltip.classList.toggle('visible');
+  }
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.transcript-error-word')) {
+      document.querySelectorAll('.error-tooltip.visible').forEach(t => t.classList.remove('visible'));
+    }
+  });
+
+  // ─── Errors ───
+  function showError(id) {
+    document.getElementById(id).classList.add('active');
+  }
+  function closeError(id) {
+    document.getElementById(id).classList.remove('active');
+  }
+
+  // ─── Copy functions ───
+  function copyTranscript() {
+    const body = document.getElementById('transcript-body');
+    const lines = body.querySelectorAll('.transcript-line');
+    let text = '';
+    lines.forEach(l => {
+      text += l.textContent.trim() + '\n';
+    });
+    navigator.clipboard.writeText(text).then(() => alert('Transcript copied to clipboard'));
+  }
+
+  function copySummary() {
+    copyPlain();
+  }
+
+  function copyMarkdown() {
+    const md = `# Sprint Planning #42 - Mar 28
+## Key Points
+- Last sprint closed 34/40 story points, with carryover on the API migration (80% done, authentication endpoints remaining).
+- This sprint's priorities: Kubernetes deployment and CI/CD pipeline setup.
+- Database migration scripts ready but need production data snapshot for testing. Target: Wed/Thu.
+- P1 bug in export function (drops rows >10k records) - SQLite cursor issue, hotfix planned today.
+
+## Action Items
+- **Sarah** - Kubernetes deployment, staging environment by Wednesday
+- **Raj** - Database migration after getting prod data snapshot
+- **[Unknown]** - Ping DevOps for snapshot access today
+- **[Unknown]** - Hotfix export pagination bug today
+
+---
+*Generated by Rekal v0.1.0 | 87% transcript confidence | Review recommended*`;
+    navigator.clipboard.writeText(md).then(() => alert('Markdown copied to clipboard'));
+  }
+
+  function copyPlain() {
+    const plain = `Sprint Planning #42 - Mar 28
+
+Key Points:
+- Last sprint closed 34/40 story points, with carryover on the API migration (80% done, authentication endpoints remaining).
+- This sprint's priorities: Kubernetes deployment and CI/CD pipeline setup.
+- Database migration scripts ready but need production data snapshot for testing. Target: Wed/Thu.
+- P1 bug in export function (drops rows >10k records) - SQLite cursor issue, hotfix planned today.
+
+Action Items:
+- Sarah - Kubernetes deployment, staging environment by Wednesday
+- Raj - Database migration after getting prod data snapshot
+- [Unknown] - Ping DevOps for snapshot access today
+- [Unknown] - Hotfix export pagination bug today
+
+(Generated by Rekal | 87% transcript confidence | Review recommended)`;
+    navigator.clipboard.writeText(plain).then(() => alert('Plain text copied to clipboard'));
+  }
+</script>
+</body>
+</html>

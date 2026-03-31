@@ -1,0 +1,51 @@
+import React from 'react';
+import { tokens } from '../../styles/tokens';
+
+interface CardProps {
+  children: React.ReactNode;
+  header?: React.ReactNode;
+  padding?: 'none' | 'sm' | 'md' | 'lg';
+  style?: React.CSSProperties;
+  className?: string;
+}
+
+const paddingMap = {
+  none: 0,
+  sm: tokens.spacing.md,
+  md: tokens.spacing.lg,
+  lg: tokens.spacing.xl,
+};
+
+export function Card({ children, header, padding = 'md', style, className }: CardProps) {
+  return (
+    <div
+      className={className}
+      style={{
+        background: tokens.colors.bgSurface,
+        border: `1px solid ${tokens.colors.borderSubtle}`,
+        borderRadius: tokens.radius.lg,
+        overflow: 'hidden',
+        ...style,
+      }}
+    >
+      {header && (
+        <div
+          style={{
+            padding: `${tokens.spacing.md}px ${tokens.spacing.lg}px`,
+            borderBottom: `1px solid ${tokens.colors.borderSubtle}`,
+            fontSize: tokens.fontSize.sm,
+            fontWeight: tokens.fontWeight.semibold,
+            color: tokens.colors.textSecondary,
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+          }}
+        >
+          {header}
+        </div>
+      )}
+      <div style={{ padding: paddingMap[padding] }}>
+        {children}
+      </div>
+    </div>
+  );
+}

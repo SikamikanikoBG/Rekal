@@ -1,0 +1,1636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NoteGenius - AI Meeting Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ================================================================
+   RESET & ROOT
+   ================================================================ */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg-primary: #0a0b0f;
+  --bg-secondary: #12131a;
+  --bg-card: #181922;
+  --bg-card-hover: #1e2030;
+  --bg-elevated: #222436;
+  --border: #2a2d42;
+  --border-light: #353958;
+  --text-primary: #e8eaf6;
+  --text-secondary: #9499c3;
+  --text-muted: #636891;
+  --accent: #6c5ce7;
+  --accent-light: #a29bfe;
+  --accent-glow: rgba(108, 92, 231, 0.25);
+  --green: #00d68f;
+  --green-dim: rgba(0, 214, 143, 0.15);
+  --orange: #ff9f43;
+  --orange-dim: rgba(255, 159, 67, 0.15);
+  --red: #ff6b6b;
+  --red-dim: rgba(255, 107, 107, 0.12);
+  --blue: #54a0ff;
+  --blue-dim: rgba(84, 160, 255, 0.12);
+  --pro-gold: #f0c040;
+  --pro-gold-dim: rgba(240, 192, 64, 0.12);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-lg: 16px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.3);
+  --shadow-lg: 0 8px 48px rgba(0,0,0,0.4);
+  --transition: 0.2s ease;
+}
+
+html, body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  height: 100%; overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ================================================================
+   ANIMATIONS
+   ================================================================ */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeInScale { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+@keyframes slideInRight { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes slideInLeft { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes pulseGlow { 0%,100% { box-shadow: 0 0 20px var(--accent-glow); } 50% { box-shadow: 0 0 40px var(--accent-glow), 0 0 60px rgba(108,92,231,0.1); } }
+@keyframes recording { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.3); opacity: 0.7; } }
+@keyframes countUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+@keyframes waveform { 0%,100% { height: 12px; } 50% { height: 28px; } }
+@keyframes typeLine { from { width: 0; } to { width: 100%; } }
+@keyframes checkPop { 0% { transform: scale(0); } 60% { transform: scale(1.2); } 100% { transform: scale(1); } }
+@keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes progressFill { from { width: 0; } }
+@keyframes badgePulse { 0%,100% { box-shadow: 0 0 0 0 rgba(240,192,64,0.4); } 50% { box-shadow: 0 0 0 6px rgba(240,192,64,0); } }
+
+.animate-in { animation: fadeIn 0.5s ease both; }
+.animate-in-scale { animation: fadeInScale 0.4s ease both; }
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.2s; }
+.stagger-3 { animation-delay: 0.3s; }
+.stagger-4 { animation-delay: 0.4s; }
+.stagger-5 { animation-delay: 0.5s; }
+.stagger-6 { animation-delay: 0.6s; }
+.stagger-7 { animation-delay: 0.7s; }
+
+/* ================================================================
+   LAYOUT
+   ================================================================ */
+.app {
+  display: flex; flex-direction: column;
+  height: 100vh; overflow: hidden;
+}
+
+/* Title bar */
+.titlebar {
+  height: 38px; background: var(--bg-secondary);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 12px; border-bottom: 1px solid var(--border);
+  -webkit-app-region: drag; user-select: none; flex-shrink: 0;
+}
+.titlebar-brand {
+  display: flex; align-items: center; gap: 8px;
+  font-weight: 700; font-size: 13px; letter-spacing: -0.3px;
+}
+.titlebar-brand svg { width: 18px; height: 18px; }
+.titlebar-controls { display: flex; gap: 8px; -webkit-app-region: no-drag; }
+.titlebar-btn {
+  width: 12px; height: 12px; border-radius: 50%; border: none; cursor: pointer;
+}
+.btn-close { background: var(--red); }
+.btn-min { background: var(--orange); }
+.btn-max { background: var(--green); }
+
+/* Navigation */
+.nav-tabs {
+  display: flex; background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  padding: 0 16px; flex-shrink: 0;
+}
+.nav-tab {
+  padding: 12px 20px; font-size: 13px; font-weight: 500;
+  color: var(--text-muted); cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: var(--transition); position: relative;
+  display: flex; align-items: center; gap: 6px;
+}
+.nav-tab:hover { color: var(--text-secondary); }
+.nav-tab.active { color: var(--accent-light); border-bottom-color: var(--accent); }
+.nav-tab .tab-icon { font-size: 15px; }
+
+/* Screen container */
+.screens { flex: 1; overflow: hidden; position: relative; }
+.screen {
+  position: absolute; inset: 0; overflow-y: auto;
+  display: none; padding: 0;
+}
+.screen.active { display: block; }
+.screen::-webkit-scrollbar { width: 6px; }
+.screen::-webkit-scrollbar-track { background: transparent; }
+.screen::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ================================================================
+   SHARED COMPONENTS
+   ================================================================ */
+.badge-pro {
+  display: inline-flex; align-items: center; gap: 3px;
+  background: var(--pro-gold-dim); color: var(--pro-gold);
+  font-size: 9px; font-weight: 700; letter-spacing: 0.8px;
+  padding: 2px 7px; border-radius: 4px;
+  text-transform: uppercase;
+  animation: badgePulse 3s infinite;
+}
+.badge-pro svg { width: 10px; height: 10px; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 10px 22px; border-radius: var(--radius-sm);
+  font-family: inherit; font-size: 14px; font-weight: 600;
+  cursor: pointer; border: none; transition: var(--transition);
+  text-decoration: none;
+}
+.btn-primary {
+  background: var(--accent); color: #fff;
+  box-shadow: 0 2px 12px var(--accent-glow);
+}
+.btn-primary:hover { background: #7c6df0; transform: translateY(-1px); box-shadow: 0 4px 20px var(--accent-glow); }
+.btn-secondary {
+  background: var(--bg-elevated); color: var(--text-primary);
+  border: 1px solid var(--border-light);
+}
+.btn-secondary:hover { background: var(--bg-card-hover); border-color: var(--accent); }
+.btn-ghost { background: none; color: var(--text-secondary); }
+.btn-ghost:hover { color: var(--text-primary); }
+.btn-sm { padding: 6px 14px; font-size: 12px; }
+.btn-lg { padding: 14px 32px; font-size: 16px; border-radius: var(--radius); }
+
+.card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px;
+  transition: var(--transition);
+}
+.card:hover { border-color: var(--border-light); }
+
+.section-title {
+  font-size: 13px; font-weight: 600; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px;
+}
+
+.tag {
+  display: inline-block; padding: 3px 10px; border-radius: 20px;
+  font-size: 11px; font-weight: 500;
+}
+
+/* ================================================================
+   SCREEN 1 — WELCOME / ONBOARDING
+   ================================================================ */
+#screen-welcome { background: var(--bg-primary); padding: 0 !important; display: flex; flex-direction: column; }
+#screen-welcome.active { display: flex; }
+
+.welcome-wrapper { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+
+/* Hero */
+.welcome-hero {
+  text-align: center; padding: 48px 40px 32px;
+  position: relative; overflow: hidden;
+}
+.welcome-hero::before {
+  content: ''; position: absolute; top: -80px; left: 50%; transform: translateX(-50%);
+  width: 600px; height: 400px;
+  background: radial-gradient(ellipse, var(--accent-glow) 0%, transparent 70%);
+  pointer-events: none; opacity: 0.5;
+}
+.welcome-logo {
+  width: 72px; height: 72px; margin: 0 auto 20px;
+  background: linear-gradient(135deg, var(--accent), #a29bfe);
+  border-radius: 20px; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 8px 32px var(--accent-glow);
+  animation: float 4s ease-in-out infinite;
+  position: relative;
+}
+.welcome-logo svg { width: 36px; height: 36px; }
+
+.welcome-hero h1 {
+  font-size: 32px; font-weight: 800; letter-spacing: -0.8px;
+  margin-bottom: 10px; line-height: 1.2;
+  background: linear-gradient(135deg, #fff 30%, var(--accent-light));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.welcome-hero p {
+  font-size: 16px; color: var(--text-secondary); max-width: 480px;
+  margin: 0 auto 28px; line-height: 1.6;
+}
+
+/* Trust bar */
+.trust-bar {
+  display: flex; justify-content: center; gap: 32px;
+  margin-bottom: 32px; flex-wrap: wrap;
+}
+.trust-item {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--text-muted);
+}
+.trust-item svg { width: 16px; height: 16px; color: var(--green); flex-shrink: 0; }
+
+/* Steps */
+.onboard-steps {
+  display: flex; gap: 16px; max-width: 800px;
+  margin: 0 auto; padding: 0 40px 20px;
+}
+.onboard-step {
+  flex: 1; background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 24px 20px;
+  text-align: center; position: relative; transition: var(--transition);
+}
+.onboard-step:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow); }
+.step-num {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--accent); color: #fff; font-weight: 700; font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 12px;
+}
+.onboard-step h3 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+.onboard-step p { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+.step-arrow {
+  position: absolute; right: -20px; top: 50%; transform: translateY(-50%);
+  color: var(--text-muted); font-size: 18px;
+}
+
+/* CTA */
+.welcome-cta { text-align: center; padding: 12px 40px 20px; }
+.welcome-cta .btn-lg { min-width: 280px; position: relative; overflow: hidden; }
+.welcome-cta .btn-lg::after {
+  content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+  animation: shimmer 3s infinite;
+}
+.welcome-cta .subtext { font-size: 12px; color: var(--text-muted); margin-top: 10px; }
+
+/* Social proof */
+.social-proof {
+  background: var(--bg-secondary); border-top: 1px solid var(--border);
+  padding: 24px 40px; display: flex; justify-content: center; gap: 48px;
+  flex-wrap: wrap;
+}
+.proof-stat { text-align: center; }
+.proof-stat .num { font-size: 24px; font-weight: 800; color: var(--accent-light); }
+.proof-stat .label { font-size: 11px; color: var(--text-muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* Enterprise trust */
+.enterprise-trust {
+  padding: 20px 40px 28px; text-align: center;
+}
+.enterprise-trust .section-title { margin-bottom: 16px; font-size: 11px; }
+.trust-logos {
+  display: flex; justify-content: center; gap: 36px; align-items: center;
+  opacity: 0.35;
+}
+.trust-logo {
+  font-size: 13px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--text-secondary);
+}
+
+/* ================================================================
+   SCREEN 2 — MAIN / DASHBOARD
+   ================================================================ */
+#screen-main { padding: 24px 28px; }
+
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  grid-template-rows: auto auto 1fr;
+  gap: 20px; height: 100%;
+}
+
+/* Engagement banner */
+.engagement-banner {
+  grid-column: 1 / -1;
+  background: linear-gradient(135deg, rgba(108,92,231,0.12) 0%, rgba(0,214,143,0.08) 100%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px 24px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.engagement-left { display: flex; align-items: center; gap: 16px; }
+.engagement-icon {
+  width: 44px; height: 44px; border-radius: 12px;
+  background: var(--green-dim); display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+}
+.engagement-text h3 { font-size: 15px; font-weight: 700; }
+.engagement-text p { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+.engagement-stats { display: flex; gap: 28px; }
+.eng-stat { text-align: center; }
+.eng-stat .val { font-size: 22px; font-weight: 800; color: var(--green); }
+.eng-stat .lbl { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* Record panel */
+.record-panel {
+  grid-column: 1; grid-row: 2;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 28px;
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center; position: relative;
+}
+.record-btn-wrapper { position: relative; margin-bottom: 20px; }
+.record-btn {
+  width: 88px; height: 88px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), #8b7cf7);
+  border: none; cursor: pointer; position: relative; z-index: 1;
+  display: flex; align-items: center; justify-content: center;
+  transition: var(--transition);
+  box-shadow: 0 4px 24px var(--accent-glow);
+}
+.record-btn:hover { transform: scale(1.05); box-shadow: 0 6px 32px var(--accent-glow); }
+.record-btn svg { width: 32px; height: 32px; color: #fff; }
+.record-btn.is-recording { background: linear-gradient(135deg, var(--red), #ff8787); box-shadow: 0 4px 24px var(--red-dim); }
+.record-btn.is-recording .rec-dot { animation: recording 1s infinite; }
+.record-ring {
+  position: absolute; inset: -8px; border-radius: 50%;
+  border: 2px solid var(--accent); opacity: 0.3;
+}
+.record-btn.is-recording ~ .record-ring { border-color: var(--red); animation: pulseGlow 2s infinite; }
+
+.record-label { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+.record-sub { font-size: 12px; color: var(--text-muted); margin-bottom: 16px; }
+
+.audio-sources {
+  display: flex; gap: 12px; width: 100%;
+}
+.audio-source {
+  flex: 1; background: var(--bg-elevated); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 10px 14px;
+  display: flex; align-items: center; gap: 8px; font-size: 12px;
+}
+.audio-source .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+.audio-source .dot.off { background: var(--text-muted); }
+.audio-source .src-label { color: var(--text-secondary); }
+.audio-source .src-name { font-weight: 600; font-size: 11px; margin-top: 1px; }
+
+/* Waveform */
+.waveform-container {
+  display: flex; align-items: center; justify-content: center;
+  gap: 3px; height: 36px; margin: 16px 0 0; width: 100%;
+}
+.waveform-bar {
+  width: 3px; background: var(--accent); border-radius: 2px;
+  height: 12px; opacity: 0.5;
+}
+.is-recording-view .waveform-bar {
+  animation: waveform 0.6s ease-in-out infinite;
+  background: var(--red); opacity: 0.7;
+}
+.waveform-bar:nth-child(2n) { animation-delay: 0.15s; }
+.waveform-bar:nth-child(3n) { animation-delay: 0.3s; }
+.waveform-bar:nth-child(5n) { animation-delay: 0.05s; }
+
+/* Quick actions sidebar */
+.sidebar-col {
+  grid-column: 2; grid-row: 2 / 4;
+  display: flex; flex-direction: column; gap: 16px;
+}
+.quick-actions { display: flex; flex-direction: column; gap: 8px; }
+.quick-action {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 14px 16px;
+  display: flex; align-items: center; gap: 12px; cursor: pointer;
+  transition: var(--transition);
+}
+.quick-action:hover { border-color: var(--accent); background: var(--bg-card-hover); }
+.qa-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0;
+}
+.qa-icon.purple { background: rgba(108,92,231,0.15); }
+.qa-icon.green { background: var(--green-dim); }
+.qa-icon.blue { background: var(--blue-dim); }
+.qa-icon.orange { background: var(--orange-dim); }
+.qa-text h4 { font-size: 13px; font-weight: 600; }
+.qa-text p { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+.qa-pro { margin-left: auto; }
+
+/* Recent meetings */
+.recent-meetings { grid-column: 1; grid-row: 3; }
+.meeting-list { display: flex; flex-direction: column; gap: 8px; }
+.meeting-item {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 14px 18px;
+  display: flex; align-items: center; gap: 14px; cursor: pointer;
+  transition: var(--transition);
+}
+.meeting-item:hover { border-color: var(--accent); background: var(--bg-card-hover); }
+.meeting-type-icon {
+  width: 40px; height: 40px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.meeting-type-icon.standup { background: var(--blue-dim); }
+.meeting-type-icon.review { background: rgba(108,92,231,0.15); }
+.meeting-type-icon.client { background: var(--green-dim); }
+.meeting-type-icon.retro { background: var(--orange-dim); }
+.meeting-info { flex: 1; min-width: 0; }
+.meeting-info h4 { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.meeting-meta { display: flex; align-items: center; gap: 10px; margin-top: 3px; font-size: 11px; color: var(--text-muted); }
+.meeting-actions { display: flex; gap: 6px; }
+.meeting-action-btn {
+  width: 30px; height: 30px; border-radius: 6px;
+  background: var(--bg-elevated); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text-muted); font-size: 13px;
+  transition: var(--transition);
+}
+.meeting-action-btn:hover { color: var(--accent-light); border-color: var(--accent); }
+
+/* ================================================================
+   SCREEN 3 — RESULTS
+   ================================================================ */
+#screen-results { padding: 24px 28px; }
+
+.results-grid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 20px;
+}
+
+/* Header */
+.results-header {
+  grid-column: 1 / -1;
+  display: flex; align-items: flex-start; justify-content: space-between;
+}
+.results-header-left h2 { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+.results-header-left .results-meta {
+  display: flex; gap: 16px; font-size: 12px; color: var(--text-muted);
+}
+.results-header-left .results-meta span { display: flex; align-items: center; gap: 4px; }
+.results-actions { display: flex; gap: 8px; }
+
+/* Main notes area */
+.notes-area { grid-column: 1; display: flex; flex-direction: column; gap: 16px; }
+
+.note-section {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px; position: relative;
+}
+.note-section-header {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+}
+.note-section-icon {
+  width: 28px; height: 28px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+}
+.note-section-header h3 { font-size: 15px; font-weight: 700; }
+
+/* Summary */
+.summary-text { font-size: 14px; line-height: 1.75; color: var(--text-secondary); }
+.summary-text strong { color: var(--text-primary); font-weight: 600; }
+
+/* Key decisions */
+.decisions-list { display: flex; flex-direction: column; gap: 10px; }
+.decision-item {
+  display: flex; gap: 10px; padding: 10px 14px;
+  background: var(--bg-elevated); border-radius: var(--radius-sm);
+  font-size: 13px; line-height: 1.5;
+}
+.decision-bullet {
+  width: 22px; height: 22px; border-radius: 6px;
+  background: var(--accent); color: #fff; font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* Action items */
+.action-items { display: flex; flex-direction: column; gap: 8px; }
+.action-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 12px 14px; background: var(--bg-elevated);
+  border-radius: var(--radius-sm); border-left: 3px solid var(--accent);
+}
+.action-item.high { border-left-color: var(--red); }
+.action-item.medium { border-left-color: var(--orange); }
+.action-item.low { border-left-color: var(--blue); }
+.action-check {
+  width: 18px; height: 18px; border-radius: 5px;
+  border: 2px solid var(--border-light); flex-shrink: 0; margin-top: 1px;
+  cursor: pointer; transition: var(--transition);
+}
+.action-check:hover { border-color: var(--accent); }
+.action-check.checked { background: var(--green); border-color: var(--green); }
+.action-content { flex: 1; }
+.action-content .action-text { font-size: 13px; font-weight: 500; }
+.action-content .action-assignee {
+  font-size: 11px; color: var(--text-muted); margin-top: 3px;
+  display: flex; align-items: center; gap: 6px;
+}
+.assignee-avatar {
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--accent); font-size: 8px; font-weight: 700;
+  color: #fff; display: flex; align-items: center; justify-content: center;
+}
+.priority-tag {
+  font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 10px;
+  margin-left: auto; flex-shrink: 0;
+}
+.priority-tag.high { background: var(--red-dim); color: var(--red); }
+.priority-tag.medium { background: var(--orange-dim); color: var(--orange); }
+.priority-tag.low { background: var(--blue-dim); color: var(--blue); }
+
+/* Sidebar - results */
+.results-sidebar { display: flex; flex-direction: column; gap: 16px; }
+
+/* Participants */
+.participants-list { display: flex; flex-direction: column; gap: 8px; }
+.participant {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 0;
+}
+.participant-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: #fff;
+}
+.participant-info { flex: 1; }
+.participant-info .name { font-size: 13px; font-weight: 600; }
+.participant-info .talk-time { font-size: 11px; color: var(--text-muted); }
+.talk-bar { width: 60px; height: 4px; background: var(--bg-elevated); border-radius: 2px; overflow: hidden; }
+.talk-bar-fill { height: 100%; border-radius: 2px; animation: progressFill 1s ease both; }
+
+/* Sentiment */
+.sentiment-card .sentiment-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 0; border-bottom: 1px solid var(--border);
+}
+.sentiment-card .sentiment-row:last-child { border: none; }
+.sentiment-label { font-size: 12px; color: var(--text-secondary); }
+.sentiment-value { font-size: 13px; font-weight: 600; }
+
+/* Share preview */
+.share-preview {
+  background: linear-gradient(135deg, var(--bg-card), var(--bg-elevated));
+  border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 20px; text-align: center;
+}
+.share-preview h4 { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+.share-preview p { font-size: 11px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.4; }
+.share-formats { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.share-format {
+  padding: 8px 14px; border-radius: var(--radius-sm);
+  background: var(--bg-primary); border: 1px solid var(--border);
+  font-size: 11px; font-weight: 600; cursor: pointer;
+  transition: var(--transition); display: flex; align-items: center; gap: 5px;
+}
+.share-format:hover { border-color: var(--accent); color: var(--accent-light); }
+
+/* Viral export preview */
+.export-preview-card {
+  background: #fff; border-radius: var(--radius);
+  padding: 20px; color: #1a1a2e; position: relative;
+  overflow: hidden;
+}
+.export-preview-card::after {
+  content: 'Generated by NoteGenius'; position: absolute; bottom: 8px; right: 12px;
+  font-size: 9px; color: #999; font-weight: 500;
+}
+.export-preview-card h5 { font-size: 14px; font-weight: 700; color: #1a1a2e; margin-bottom: 8px; }
+.export-preview-card .export-item {
+  font-size: 11px; color: #444; padding: 4px 0;
+  display: flex; align-items: center; gap: 6px;
+}
+.export-preview-card .export-item::before {
+  content: ''; width: 5px; height: 5px; border-radius: 50%;
+  background: var(--accent); flex-shrink: 0;
+}
+
+/* ================================================================
+   SCREEN 4 — STATS / ROI
+   ================================================================ */
+#screen-stats { padding: 24px 28px; }
+
+.stats-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 24px;
+}
+.stats-header h2 { font-size: 22px; font-weight: 800; }
+.stats-period {
+  display: flex; background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); overflow: hidden;
+}
+.period-btn {
+  padding: 8px 16px; font-size: 12px; font-weight: 500;
+  color: var(--text-muted); cursor: pointer; border: none;
+  background: none; font-family: inherit; transition: var(--transition);
+}
+.period-btn.active { background: var(--accent); color: #fff; }
+
+/* Big stats row */
+.big-stats {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+  margin-bottom: 24px;
+}
+.big-stat {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 22px;
+  position: relative; overflow: hidden;
+}
+.big-stat::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+}
+.big-stat.stat-time::before { background: var(--green); }
+.big-stat.stat-meetings::before { background: var(--accent); }
+.big-stat.stat-actions::before { background: var(--orange); }
+.big-stat.stat-value::before { background: var(--blue); }
+.big-stat .stat-icon { font-size: 20px; margin-bottom: 10px; }
+.big-stat .stat-number {
+  font-size: 36px; font-weight: 800; line-height: 1;
+  margin-bottom: 4px;
+}
+.big-stat.stat-time .stat-number { color: var(--green); }
+.big-stat.stat-meetings .stat-number { color: var(--accent-light); }
+.big-stat.stat-actions .stat-number { color: var(--orange); }
+.big-stat.stat-value .stat-number { color: var(--blue); }
+.big-stat .stat-label { font-size: 12px; color: var(--text-muted); }
+.big-stat .stat-change {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 11px; font-weight: 600; margin-top: 8px;
+  padding: 2px 8px; border-radius: 10px;
+}
+.stat-change.up { background: var(--green-dim); color: var(--green); }
+.stat-change.down { background: var(--red-dim); color: var(--red); }
+
+/* Charts row */
+.charts-row {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+  margin-bottom: 24px;
+}
+.chart-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px;
+}
+.chart-card h3 {
+  font-size: 14px; font-weight: 700; margin-bottom: 16px;
+  display: flex; align-items: center; gap: 8px;
+}
+
+/* Bar chart (CSS) */
+.bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 140px; padding-top: 10px; }
+.bar-group { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.bar {
+  width: 100%; border-radius: 4px 4px 0 0; transition: height 1s ease;
+  min-height: 4px; position: relative;
+}
+.bar:hover { opacity: 0.8; }
+.bar-label { font-size: 10px; color: var(--text-muted); }
+.bar-value {
+  position: absolute; top: -18px; left: 50%; transform: translateX(-50%);
+  font-size: 10px; font-weight: 600; color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+/* Donut chart (CSS) */
+.donut-container { display: flex; align-items: center; gap: 24px; }
+.donut {
+  width: 120px; height: 120px; border-radius: 50%;
+  position: relative; flex-shrink: 0;
+}
+.donut-center {
+  position: absolute; inset: 25px; border-radius: 50%;
+  background: var(--bg-card); display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+.donut-center .num { font-size: 20px; font-weight: 800; }
+.donut-center .lbl { font-size: 9px; color: var(--text-muted); }
+.donut-legend { display: flex; flex-direction: column; gap: 8px; }
+.legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+/* ROI calculator */
+.roi-section {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+}
+.roi-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 24px;
+}
+.roi-card h3 {
+  font-size: 14px; font-weight: 700; margin-bottom: 16px;
+  display: flex; align-items: center; gap: 8px;
+}
+.roi-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.roi-row:last-child { border: none; }
+.roi-row .roi-label { color: var(--text-secondary); }
+.roi-row .roi-value { font-weight: 700; }
+.roi-total {
+  margin-top: 12px; padding: 14px;
+  background: linear-gradient(135deg, rgba(0,214,143,0.08), rgba(108,92,231,0.08));
+  border-radius: var(--radius-sm); text-align: center;
+}
+.roi-total .big { font-size: 28px; font-weight: 800; color: var(--green); }
+.roi-total .sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+/* Streak & achievements */
+.streak-card {
+  display: flex; flex-direction: column; gap: 14px;
+}
+.streak-header {
+  display: flex; align-items: center; gap: 12px;
+}
+.streak-fire { font-size: 28px; }
+.streak-info h4 { font-size: 16px; font-weight: 700; }
+.streak-info p { font-size: 12px; color: var(--text-muted); }
+.streak-days { display: flex; gap: 6px; }
+.streak-day {
+  width: 32px; height: 32px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 600;
+}
+.streak-day.done { background: var(--green-dim); color: var(--green); }
+.streak-day.today { background: var(--accent); color: #fff; }
+.streak-day.future { background: var(--bg-elevated); color: var(--text-muted); }
+
+.achievements { display: flex; gap: 10px; flex-wrap: wrap; }
+.achievement {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg-elevated); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 8px 12px;
+}
+.achievement .ach-icon { font-size: 18px; }
+.achievement .ach-text { font-size: 11px; }
+.achievement .ach-text strong { display: block; font-size: 12px; }
+.achievement.locked { opacity: 0.4; }
+.achievement.locked .ach-text strong::after { content: ' (Locked)'; font-weight: 400; color: var(--text-muted); }
+
+/* Upgrade CTA */
+.upgrade-cta {
+  grid-column: 1 / -1; margin-top: 8px;
+  background: linear-gradient(135deg, rgba(240,192,64,0.08), rgba(108,92,231,0.1));
+  border: 1px solid rgba(240,192,64,0.25);
+  border-radius: var(--radius); padding: 24px 28px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.upgrade-cta-left { display: flex; align-items: center; gap: 16px; }
+.upgrade-cta-icon { font-size: 32px; }
+.upgrade-cta-text h3 { font-size: 16px; font-weight: 700; }
+.upgrade-cta-text p { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+.btn-upgrade {
+  background: linear-gradient(135deg, var(--pro-gold), #e6a800);
+  color: #1a1a2e; font-weight: 700; border: none;
+  padding: 12px 28px; border-radius: var(--radius-sm);
+  font-size: 14px; cursor: pointer; font-family: inherit;
+  transition: var(--transition);
+}
+.btn-upgrade:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(240,192,64,0.3); }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- Title Bar -->
+  <div class="titlebar">
+    <div class="titlebar-brand">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2L2 7l10 5 10-5-10-5z" stroke="url(#g1)"/>
+        <path d="M2 17l10 5 10-5" stroke="url(#g1)"/>
+        <path d="M2 12l10 5 10-5" stroke="url(#g1)"/>
+        <defs><linearGradient id="g1" x1="2" y1="2" x2="22" y2="22"><stop stop-color="#6c5ce7"/><stop offset="1" stop-color="#a29bfe"/></linearGradient></defs>
+      </svg>
+      NoteGenius
+      <span style="font-size:10px;font-weight:400;color:var(--text-muted);margin-left:4px;">v2.4.1</span>
+    </div>
+    <div class="titlebar-controls">
+      <button class="titlebar-btn btn-min"></button>
+      <button class="titlebar-btn btn-max"></button>
+      <button class="titlebar-btn btn-close"></button>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div class="nav-tabs">
+    <div class="nav-tab active" data-screen="welcome"><span class="tab-icon">&#9733;</span> Welcome</div>
+    <div class="nav-tab" data-screen="main"><span class="tab-icon">&#9673;</span> Dashboard</div>
+    <div class="nav-tab" data-screen="results"><span class="tab-icon">&#9998;</span> Meeting Notes</div>
+    <div class="nav-tab" data-screen="stats"><span class="tab-icon">&#9670;</span> Intelligence</div>
+  </div>
+
+  <!-- Screens Container -->
+  <div class="screens">
+
+    <!-- ============================================================
+         SCREEN 1: WELCOME / FIRST RUN
+         ============================================================ -->
+    <div id="screen-welcome" class="screen active">
+      <div class="welcome-wrapper">
+        <div class="welcome-hero">
+          <div class="welcome-logo animate-in">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m-4 0h8m-4-14a3 3 0 00-3 3v4a3 3 0 006 0V8a3 3 0 00-3-3z"/></svg>
+          </div>
+          <h1 class="animate-in stagger-1">Never write meeting notes again.</h1>
+          <p class="animate-in stagger-2">
+            NoteGenius records, transcribes, and summarizes your meetings <strong>entirely on your machine</strong>.
+            No cloud. No subscriptions. No data leaving your laptop.
+          </p>
+          <div class="trust-bar animate-in stagger-3">
+            <div class="trust-item">
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z"/></svg>
+              100% Local &mdash; Zero Cloud
+            </div>
+            <div class="trust-item">
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+              Enterprise-Grade Privacy
+            </div>
+            <div class="trust-item">
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+              Works Offline
+            </div>
+            <div class="trust-item">
+              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+              SOC 2 / HIPAA Ready
+            </div>
+          </div>
+        </div>
+
+        <div class="onboard-steps animate-in stagger-4">
+          <div class="onboard-step">
+            <div class="step-num">1</div>
+            <h3>Hit Record</h3>
+            <p>One click captures mic + system audio. Works with Zoom, Teams, Meet, or in-person.</p>
+            <span class="step-arrow">&rarr;</span>
+          </div>
+          <div class="onboard-step">
+            <div class="step-num">2</div>
+            <h3>AI Does the Work</h3>
+            <p>Local Whisper transcription + LLM summarization. Nothing leaves your machine. Ever.</p>
+            <span class="step-arrow">&rarr;</span>
+          </div>
+          <div class="onboard-step">
+            <div class="step-num">3</div>
+            <h3>Share Beautiful Notes</h3>
+            <p>Action items, decisions, summaries &mdash; exported as polished docs your team will love.</p>
+          </div>
+        </div>
+
+        <div class="welcome-cta animate-in stagger-5">
+          <button class="btn btn-primary btn-lg" onclick="switchScreen('main')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m-4 0h8m-4-14a3 3 0 00-3 3v4a3 3 0 006 0V8a3 3 0 00-3-3z"/></svg>
+            Start Your First Meeting
+          </button>
+          <div class="subtext">Setup takes 30 seconds &bull; No account required &bull; Free forever for 10 meetings/month</div>
+        </div>
+
+        <div class="social-proof animate-in stagger-6">
+          <div class="proof-stat">
+            <div class="num">47,000+</div>
+            <div class="label">Active Users</div>
+          </div>
+          <div class="proof-stat">
+            <div class="num">2.1M</div>
+            <div class="label">Meetings Processed</div>
+          </div>
+          <div class="proof-stat">
+            <div class="num">380K</div>
+            <div class="label">Hours Saved</div>
+          </div>
+          <div class="proof-stat">
+            <div class="num">4.9/5</div>
+            <div class="label">User Rating</div>
+          </div>
+        </div>
+
+        <div class="enterprise-trust animate-in stagger-7">
+          <div class="section-title">Trusted by teams at</div>
+          <div class="trust-logos">
+            <span class="trust-logo">Deloitte</span>
+            <span class="trust-logo">Stripe</span>
+            <span class="trust-logo">Figma</span>
+            <span class="trust-logo">Shopify</span>
+            <span class="trust-logo">Datadog</span>
+            <span class="trust-logo">Notion</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         SCREEN 2: MAIN DASHBOARD
+         ============================================================ -->
+    <div id="screen-main" class="screen">
+      <div class="main-grid">
+        <!-- Engagement Banner -->
+        <div class="engagement-banner animate-in">
+          <div class="engagement-left">
+            <div class="engagement-icon">&#9889;</div>
+            <div class="engagement-text">
+              <h3>You're on a roll this week!</h3>
+              <p>You've captured 6 meetings and generated 23 action items. Keep the streak alive.</p>
+            </div>
+          </div>
+          <div class="engagement-stats">
+            <div class="eng-stat">
+              <div class="val">4.2h</div>
+              <div class="lbl">Time Saved</div>
+            </div>
+            <div class="eng-stat">
+              <div class="val">6</div>
+              <div class="lbl">This Week</div>
+            </div>
+            <div class="eng-stat">
+              <div class="val">12&#128293;</div>
+              <div class="lbl">Day Streak</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Record Panel -->
+        <div class="record-panel animate-in stagger-1">
+          <div class="record-btn-wrapper">
+            <button class="record-btn" id="recordBtn" onclick="toggleRecording()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="mic-icon"><path d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m-4 0h8m-4-14a3 3 0 00-3 3v4a3 3 0 006 0V8a3 3 0 00-3-3z"/></svg>
+              <svg viewBox="0 0 24 24" fill="currentColor" class="stop-icon" style="display:none;color:#fff;"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+            </button>
+            <div class="record-ring"></div>
+          </div>
+          <div class="record-label" id="recordLabel">Ready to Record</div>
+          <div class="record-sub" id="recordSub">Click to start capturing your meeting</div>
+          <div class="record-timer" id="recordTimer" style="font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:600;color:var(--red);display:none;margin-bottom:12px;">00:00:00</div>
+
+          <div class="waveform-container" id="waveform">
+            <div class="waveform-bar" style="height:8px"></div><div class="waveform-bar" style="height:14px"></div>
+            <div class="waveform-bar" style="height:6px"></div><div class="waveform-bar" style="height:20px"></div>
+            <div class="waveform-bar" style="height:10px"></div><div class="waveform-bar" style="height:16px"></div>
+            <div class="waveform-bar" style="height:8px"></div><div class="waveform-bar" style="height:24px"></div>
+            <div class="waveform-bar" style="height:12px"></div><div class="waveform-bar" style="height:18px"></div>
+            <div class="waveform-bar" style="height:6px"></div><div class="waveform-bar" style="height:22px"></div>
+            <div class="waveform-bar" style="height:10px"></div><div class="waveform-bar" style="height:14px"></div>
+            <div class="waveform-bar" style="height:8px"></div><div class="waveform-bar" style="height:20px"></div>
+            <div class="waveform-bar" style="height:12px"></div><div class="waveform-bar" style="height:16px"></div>
+            <div class="waveform-bar" style="height:6px"></div><div class="waveform-bar" style="height:10px"></div>
+            <div class="waveform-bar" style="height:18px"></div><div class="waveform-bar" style="height:8px"></div>
+            <div class="waveform-bar" style="height:14px"></div><div class="waveform-bar" style="height:22px"></div>
+          </div>
+
+          <div class="audio-sources" style="margin-top: 16px;">
+            <div class="audio-source">
+              <div class="dot"></div>
+              <div>
+                <div class="src-label">Microphone</div>
+                <div class="src-name">Jabra Evolve2 75</div>
+              </div>
+            </div>
+            <div class="audio-source">
+              <div class="dot"></div>
+              <div>
+                <div class="src-label">System Audio</div>
+                <div class="src-name">Speakers (Realtek)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="sidebar-col">
+          <div class="section-title">Quick Actions</div>
+          <div class="quick-actions animate-in stagger-2">
+            <div class="quick-action" onclick="switchScreen('results')">
+              <div class="qa-icon purple">&#128196;</div>
+              <div class="qa-text">
+                <h4>Meeting Templates</h4>
+                <p>Standup, 1:1, Sprint Review</p>
+              </div>
+            </div>
+            <div class="quick-action">
+              <div class="qa-icon green">&#128194;</div>
+              <div class="qa-text">
+                <h4>Import Recording</h4>
+                <p>Process an existing audio file</p>
+              </div>
+            </div>
+            <div class="quick-action">
+              <div class="qa-icon blue">&#128200;</div>
+              <div class="qa-text">
+                <h4>Team Analytics</h4>
+                <p>Meeting patterns & insights</p>
+              </div>
+              <div class="qa-pro"><span class="badge-pro">PRO</span></div>
+            </div>
+            <div class="quick-action">
+              <div class="qa-icon orange">&#128279;</div>
+              <div class="qa-text">
+                <h4>Integrations</h4>
+                <p>Jira, Notion, Slack, Linear</p>
+              </div>
+              <div class="qa-pro"><span class="badge-pro">PRO</span></div>
+            </div>
+          </div>
+
+          <div class="section-title" style="margin-top:8px;">AI Models</div>
+          <div class="card" style="padding:14px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+              <span style="font-size:12px;font-weight:600;">Whisper Large v3</span>
+              <span style="font-size:10px;color:var(--green);font-weight:600;">Active</span>
+            </div>
+            <div style="height:4px;background:var(--bg-elevated);border-radius:2px;overflow:hidden;margin-bottom:8px;">
+              <div style="width:100%;height:100%;background:var(--green);border-radius:2px;"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:12px;font-weight:600;">Llama 3.1 8B</span>
+              <span style="font-size:10px;color:var(--green);font-weight:600;">Active</span>
+            </div>
+            <div style="height:4px;background:var(--bg-elevated);border-radius:2px;overflow:hidden;margin-top:6px;">
+              <div style="width:100%;height:100%;background:var(--green);border-radius:2px;"></div>
+            </div>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:8px;">GPU: NVIDIA RTX 4060 &bull; VRAM: 5.2/8 GB</div>
+          </div>
+        </div>
+
+        <!-- Recent Meetings -->
+        <div class="recent-meetings animate-in stagger-3">
+          <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;">
+            Recent Meetings
+            <span style="font-size:11px;color:var(--accent-light);cursor:pointer;text-transform:none;letter-spacing:0;font-weight:500;">View All &rarr;</span>
+          </div>
+          <div class="meeting-list">
+            <div class="meeting-item" onclick="switchScreen('results')">
+              <div class="meeting-type-icon standup">&#9728;</div>
+              <div class="meeting-info">
+                <h4>Daily Standup &mdash; Platform Team</h4>
+                <div class="meeting-meta">
+                  <span>Today, 9:15 AM</span>
+                  <span>&bull; 12 min</span>
+                  <span>&bull; 5 participants</span>
+                  <span class="tag" style="background:var(--green-dim);color:var(--green);">3 actions</span>
+                </div>
+              </div>
+              <div class="meeting-actions">
+                <div class="meeting-action-btn" title="View Notes">&#128196;</div>
+                <div class="meeting-action-btn" title="Export">&#128228;</div>
+              </div>
+            </div>
+            <div class="meeting-item" onclick="switchScreen('results')">
+              <div class="meeting-type-icon review">&#128302;</div>
+              <div class="meeting-info">
+                <h4>Q1 Product Review &mdash; Leadership</h4>
+                <div class="meeting-meta">
+                  <span>Yesterday, 2:00 PM</span>
+                  <span>&bull; 47 min</span>
+                  <span>&bull; 8 participants</span>
+                  <span class="tag" style="background:rgba(108,92,231,0.15);color:var(--accent-light);">7 actions</span>
+                </div>
+              </div>
+              <div class="meeting-actions">
+                <div class="meeting-action-btn" title="View Notes">&#128196;</div>
+                <div class="meeting-action-btn" title="Export">&#128228;</div>
+              </div>
+            </div>
+            <div class="meeting-item" onclick="switchScreen('results')">
+              <div class="meeting-type-icon client">&#129309;</div>
+              <div class="meeting-info">
+                <h4>Client Onboarding &mdash; Acme Corp</h4>
+                <div class="meeting-meta">
+                  <span>Mar 27, 10:30 AM</span>
+                  <span>&bull; 35 min</span>
+                  <span>&bull; 4 participants</span>
+                  <span class="tag" style="background:var(--green-dim);color:var(--green);">5 actions</span>
+                </div>
+              </div>
+              <div class="meeting-actions">
+                <div class="meeting-action-btn" title="View Notes">&#128196;</div>
+                <div class="meeting-action-btn" title="Export">&#128228;</div>
+              </div>
+            </div>
+            <div class="meeting-item">
+              <div class="meeting-type-icon retro">&#128300;</div>
+              <div class="meeting-info">
+                <h4>Sprint 24 Retrospective</h4>
+                <div class="meeting-meta">
+                  <span>Mar 26, 4:00 PM</span>
+                  <span>&bull; 28 min</span>
+                  <span>&bull; 6 participants</span>
+                  <span class="tag" style="background:var(--orange-dim);color:var(--orange);">4 actions</span>
+                </div>
+              </div>
+              <div class="meeting-actions">
+                <div class="meeting-action-btn" title="View Notes">&#128196;</div>
+                <div class="meeting-action-btn" title="Export">&#128228;</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         SCREEN 3: RESULTS / MEETING NOTES
+         ============================================================ -->
+    <div id="screen-results" class="screen">
+      <div class="results-grid">
+        <!-- Header -->
+        <div class="results-header animate-in">
+          <div class="results-header-left">
+            <h2>Q1 Product Review &mdash; Leadership</h2>
+            <div class="results-meta">
+              <span>&#128197; March 28, 2026</span>
+              <span>&#128337; 2:00 PM &ndash; 2:47 PM (47 min)</span>
+              <span>&#128101; 8 participants</span>
+            </div>
+          </div>
+          <div class="results-actions">
+            <button class="btn btn-secondary btn-sm">&#128196; Copy Notes</button>
+            <button class="btn btn-secondary btn-sm">&#128228; Export <span class="badge-pro" style="margin-left:4px;">PRO</span></button>
+            <button class="btn btn-primary btn-sm">&#128279; Share</button>
+          </div>
+        </div>
+
+        <!-- Notes Area -->
+        <div class="notes-area">
+          <!-- Summary -->
+          <div class="note-section animate-in stagger-1">
+            <div class="note-section-header">
+              <div class="note-section-icon" style="background:rgba(108,92,231,0.15);">&#128221;</div>
+              <h3>Executive Summary</h3>
+            </div>
+            <div class="summary-text">
+              The leadership team reviewed <strong>Q1 product performance</strong>, noting a <strong>23% increase in enterprise adoption</strong>
+              and <strong>4.8x improvement in onboarding completion rates</strong> after the February redesign.
+              <strong>Sarah Chen</strong> presented the competitive analysis showing NoteGenius maintaining a clear lead in
+              privacy-conscious enterprise segments. The team agreed to <strong>accelerate the API launch to April 15th</strong>
+              and approved <strong>$240K additional budget</strong> for the partner integration program.
+              <strong>Key concern:</strong> GPU memory optimization for the new Whisper v4 model needs resolution before the next release.
+            </div>
+          </div>
+
+          <!-- Key Decisions -->
+          <div class="note-section animate-in stagger-2">
+            <div class="note-section-header">
+              <div class="note-section-icon" style="background:var(--green-dim);">&#9989;</div>
+              <h3>Key Decisions</h3>
+            </div>
+            <div class="decisions-list">
+              <div class="decision-item">
+                <div class="decision-bullet">1</div>
+                <div>API launch date moved up to <strong>April 15th</strong> (from May 1st) to capture enterprise pipeline</div>
+              </div>
+              <div class="decision-item">
+                <div class="decision-bullet">2</div>
+                <div>Approved <strong>$240K budget</strong> for partner integrations (Jira, Linear, Notion connectors)</div>
+              </div>
+              <div class="decision-item">
+                <div class="decision-bullet">3</div>
+                <div>Will hire <strong>2 senior ML engineers</strong> focused on model optimization and on-device inference</div>
+              </div>
+              <div class="decision-item">
+                <div class="decision-bullet">4</div>
+                <div>Enterprise pricing tier to launch at <strong>$29/seat/month</strong> with volume discounts</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Items -->
+          <div class="note-section animate-in stagger-3">
+            <div class="note-section-header">
+              <div class="note-section-icon" style="background:var(--orange-dim);">&#127919;</div>
+              <h3>Action Items</h3>
+              <span style="margin-left:auto;font-size:12px;color:var(--text-muted);">7 items &bull; 2 high priority</span>
+            </div>
+            <div class="action-items">
+              <div class="action-item high">
+                <div class="action-check"></div>
+                <div class="action-content">
+                  <div class="action-text">Finalize API documentation and developer portal by April 8th</div>
+                  <div class="action-assignee">
+                    <div class="assignee-avatar" style="background:#6c5ce7;">MK</div>
+                    Marcus Kim &bull; Due Apr 8
+                  </div>
+                </div>
+                <span class="priority-tag high">High</span>
+              </div>
+              <div class="action-item high">
+                <div class="action-check"></div>
+                <div class="action-content">
+                  <div class="action-text">Resolve GPU memory leak in Whisper v4 integration &mdash; blocking release</div>
+                  <div class="action-assignee">
+                    <div class="assignee-avatar" style="background:#00d68f;">RP</div>
+                    Raj Patel &bull; Due Apr 3
+                  </div>
+                </div>
+                <span class="priority-tag high">High</span>
+              </div>
+              <div class="action-item medium">
+                <div class="action-check"></div>
+                <div class="action-content">
+                  <div class="action-text">Draft partner integration outreach emails for Jira, Linear, and Notion teams</div>
+                  <div class="action-assignee">
+                    <div class="assignee-avatar" style="background:#ff9f43;">SC</div>
+                    Sarah Chen &bull; Due Apr 5
+                  </div>
+                </div>
+                <span class="priority-tag medium">Medium</span>
+              </div>
+              <div class="action-item medium">
+                <div class="action-check checked"></div>
+                <div class="action-content">
+                  <div class="action-text" style="text-decoration:line-through;opacity:0.6;">Send updated competitive analysis deck to board members</div>
+                  <div class="action-assignee">
+                    <div class="assignee-avatar" style="background:#54a0ff;">SC</div>
+                    Sarah Chen &bull; Completed
+                  </div>
+                </div>
+                <span class="priority-tag medium">Medium</span>
+              </div>
+              <div class="action-item low">
+                <div class="action-check"></div>
+                <div class="action-content">
+                  <div class="action-text">Schedule ML engineering candidate interviews for next week</div>
+                  <div class="action-assignee">
+                    <div class="assignee-avatar" style="background:#a29bfe;">JL</div>
+                    Jamie Lee &bull; Due Apr 4
+                  </div>
+                </div>
+                <span class="priority-tag low">Low</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Results Sidebar -->
+        <div class="results-sidebar">
+          <!-- Participants & Talk Time -->
+          <div class="note-section animate-in stagger-2">
+            <div class="note-section-header">
+              <div class="note-section-icon" style="background:var(--blue-dim);">&#128101;</div>
+              <h3>Participants</h3>
+            </div>
+            <div class="participants-list">
+              <div class="participant">
+                <div class="participant-avatar" style="background:#6c5ce7;">SC</div>
+                <div class="participant-info">
+                  <div class="name">Sarah Chen</div>
+                  <div class="talk-time">32% talk time</div>
+                </div>
+                <div class="talk-bar"><div class="talk-bar-fill" style="width:32%;background:var(--accent);"></div></div>
+              </div>
+              <div class="participant">
+                <div class="participant-avatar" style="background:#00d68f;">MK</div>
+                <div class="participant-info">
+                  <div class="name">Marcus Kim</div>
+                  <div class="talk-time">24% talk time</div>
+                </div>
+                <div class="talk-bar"><div class="talk-bar-fill" style="width:24%;background:var(--green);"></div></div>
+              </div>
+              <div class="participant">
+                <div class="participant-avatar" style="background:#ff9f43;">RP</div>
+                <div class="participant-info">
+                  <div class="name">Raj Patel</div>
+                  <div class="talk-time">18% talk time</div>
+                </div>
+                <div class="talk-bar"><div class="talk-bar-fill" style="width:18%;background:var(--orange);"></div></div>
+              </div>
+              <div class="participant">
+                <div class="participant-avatar" style="background:#54a0ff;">JL</div>
+                <div class="participant-info">
+                  <div class="name">Jamie Lee</div>
+                  <div class="talk-time">14% talk time</div>
+                </div>
+                <div class="talk-bar"><div class="talk-bar-fill" style="width:14%;background:var(--blue);"></div></div>
+              </div>
+              <div style="font-size:11px;color:var(--text-muted);padding-top:4px;">+4 others</div>
+            </div>
+          </div>
+
+          <!-- Sentiment -->
+          <div class="note-section sentiment-card animate-in stagger-3">
+            <div class="note-section-header">
+              <div class="note-section-icon" style="background:var(--green-dim);">&#128200;</div>
+              <h3>Meeting Pulse</h3>
+              <span class="badge-pro" style="margin-left:auto;">PRO</span>
+            </div>
+            <div class="sentiment-row">
+              <span class="sentiment-label">Overall Sentiment</span>
+              <span class="sentiment-value" style="color:var(--green);">Positive (82%)</span>
+            </div>
+            <div class="sentiment-row">
+              <span class="sentiment-label">Energy Level</span>
+              <span class="sentiment-value" style="color:var(--orange);">High</span>
+            </div>
+            <div class="sentiment-row">
+              <span class="sentiment-label">Decision Velocity</span>
+              <span class="sentiment-value" style="color:var(--accent-light);">4 in 47min</span>
+            </div>
+            <div class="sentiment-row">
+              <span class="sentiment-label">Follow-up Risk</span>
+              <span class="sentiment-value" style="color:var(--red);">2 items at risk</span>
+            </div>
+          </div>
+
+          <!-- Export / Share Preview -->
+          <div class="share-preview animate-in stagger-4">
+            <h4>Share These Notes</h4>
+            <p>Export polished meeting notes that make your team look organized.</p>
+            <div class="share-formats">
+              <div class="share-format">&#128196; PDF</div>
+              <div class="share-format">&#128221; Markdown</div>
+              <div class="share-format">&#128231; Email</div>
+              <div class="share-format">&#128247; Notion</div>
+            </div>
+          </div>
+
+          <!-- Viral Export Preview -->
+          <div class="export-preview-card animate-in stagger-5">
+            <h5>Q1 Product Review</h5>
+            <div style="font-size:10px;color:#888;margin-bottom:8px;">March 28, 2026 &bull; 47 min &bull; 8 attendees</div>
+            <div class="export-item">API launch accelerated to April 15th</div>
+            <div class="export-item">$240K approved for partner integrations</div>
+            <div class="export-item">Hiring 2 senior ML engineers</div>
+            <div class="export-item">Enterprise tier: $29/seat/month</div>
+            <div style="height:12px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         SCREEN 4: STATS / ROI DASHBOARD
+         ============================================================ -->
+    <div id="screen-stats" class="screen">
+      <div class="stats-header animate-in">
+        <h2>Your Meeting Intelligence</h2>
+        <div class="stats-period">
+          <button class="period-btn" onclick="setPeriod(this)">7 Days</button>
+          <button class="period-btn active" onclick="setPeriod(this)">30 Days</button>
+          <button class="period-btn" onclick="setPeriod(this)">90 Days</button>
+          <button class="period-btn" onclick="setPeriod(this)">All Time</button>
+        </div>
+      </div>
+
+      <!-- Big Stats -->
+      <div class="big-stats">
+        <div class="big-stat stat-time animate-in stagger-1">
+          <div class="stat-icon">&#9201;</div>
+          <div class="stat-number">18.6h</div>
+          <div class="stat-label">Time Saved This Month</div>
+          <div class="stat-change up">&#9650; 24% vs last month</div>
+        </div>
+        <div class="big-stat stat-meetings animate-in stagger-2">
+          <div class="stat-icon">&#127908;</div>
+          <div class="stat-number">34</div>
+          <div class="stat-label">Meetings Captured</div>
+          <div class="stat-change up">&#9650; 12% vs last month</div>
+        </div>
+        <div class="big-stat stat-actions animate-in stagger-3">
+          <div class="stat-icon">&#127919;</div>
+          <div class="stat-number">89</div>
+          <div class="stat-label">Action Items Generated</div>
+          <div class="stat-change up">&#9650; 31% vs last month</div>
+        </div>
+        <div class="big-stat stat-value animate-in stagger-4">
+          <div class="stat-icon">&#128176;</div>
+          <div class="stat-number">$2,790</div>
+          <div class="stat-label">Estimated Value Created</div>
+          <div class="stat-change up">&#9650; 28% vs last month</div>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="charts-row">
+        <div class="chart-card animate-in stagger-3">
+          <h3>&#128202; Meetings Per Week</h3>
+          <div class="bar-chart">
+            <div class="bar-group">
+              <div class="bar" style="height:45%;background:var(--accent);"><div class="bar-value">5</div></div>
+              <div class="bar-label">W1</div>
+            </div>
+            <div class="bar-group">
+              <div class="bar" style="height:72%;background:var(--accent);"><div class="bar-value">8</div></div>
+              <div class="bar-label">W2</div>
+            </div>
+            <div class="bar-group">
+              <div class="bar" style="height:63%;background:var(--accent);"><div class="bar-value">7</div></div>
+              <div class="bar-label">W3</div>
+            </div>
+            <div class="bar-group">
+              <div class="bar" style="height:100%;background:linear-gradient(to top, var(--accent), var(--accent-light));"><div class="bar-value">11</div></div>
+              <div class="bar-label">W4</div>
+            </div>
+            <div class="bar-group">
+              <div class="bar" style="height:27%;background:var(--accent);opacity:0.5;"><div class="bar-value">3</div></div>
+              <div class="bar-label">W5</div>
+            </div>
+          </div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:10px;text-align:center;">Current week in progress</div>
+        </div>
+
+        <div class="chart-card animate-in stagger-4">
+          <h3>&#128200; Meeting Types <span class="badge-pro" style="margin-left:auto;">PRO</span></h3>
+          <div class="donut-container">
+            <div class="donut" style="background:conic-gradient(var(--accent) 0% 35%, var(--green) 35% 55%, var(--orange) 55% 75%, var(--blue) 75% 88%, var(--text-muted) 88% 100%);">
+              <div class="donut-center">
+                <div class="num">34</div>
+                <div class="lbl">total</div>
+              </div>
+            </div>
+            <div class="donut-legend">
+              <div class="legend-item"><div class="legend-dot" style="background:var(--accent);"></div> Standups (35%)</div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--green);"></div> Client Calls (20%)</div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--orange);"></div> Reviews (20%)</div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--blue);"></div> 1:1s (13%)</div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--text-muted);"></div> Other (12%)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ROI Section -->
+      <div class="roi-section">
+        <div class="roi-card animate-in stagger-5">
+          <h3>&#128176; ROI Calculator</h3>
+          <div class="roi-row">
+            <span class="roi-label">Avg meeting duration</span>
+            <span class="roi-value">38 min</span>
+          </div>
+          <div class="roi-row">
+            <span class="roi-label">Time to write notes (manual)</span>
+            <span class="roi-value">~15 min/meeting</span>
+          </div>
+          <div class="roi-row">
+            <span class="roi-label">Time with NoteGenius</span>
+            <span class="roi-value" style="color:var(--green);">~2 min/meeting</span>
+          </div>
+          <div class="roi-row">
+            <span class="roi-label">Meetings this month</span>
+            <span class="roi-value">34 meetings</span>
+          </div>
+          <div class="roi-row">
+            <span class="roi-label">Your hourly rate (est.)</span>
+            <span class="roi-value">$150/hr</span>
+          </div>
+          <div class="roi-total">
+            <div class="big">$2,790 saved</div>
+            <div class="sub">18.6 hours reclaimed this month &bull; 93x ROI vs Pro plan</div>
+          </div>
+        </div>
+
+        <div class="roi-card streak-card animate-in stagger-6">
+          <h3>&#128293; Streak & Achievements</h3>
+          <div class="streak-header">
+            <div class="streak-fire">&#128293;</div>
+            <div class="streak-info">
+              <h4>12 Day Streak!</h4>
+              <p>You've used NoteGenius every workday for 12 days straight.</p>
+            </div>
+          </div>
+          <div class="streak-days">
+            <div class="streak-day done">M</div>
+            <div class="streak-day done">T</div>
+            <div class="streak-day done">W</div>
+            <div class="streak-day done">T</div>
+            <div class="streak-day today">F</div>
+            <div class="streak-day future">S</div>
+            <div class="streak-day future">S</div>
+          </div>
+          <div style="margin-top:8px;"><div class="section-title">Achievements</div></div>
+          <div class="achievements">
+            <div class="achievement">
+              <div class="ach-icon">&#127942;</div>
+              <div class="ach-text"><strong>First 100</strong>100 meetings captured</div>
+            </div>
+            <div class="achievement">
+              <div class="ach-icon">&#9889;</div>
+              <div class="ach-text"><strong>Speed Demon</strong>10 meetings in one day</div>
+            </div>
+            <div class="achievement locked">
+              <div class="ach-icon">&#128142;</div>
+              <div class="ach-text"><strong>Power User</strong>500 meetings total</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upgrade CTA -->
+      <div class="upgrade-cta animate-in stagger-7">
+        <div class="upgrade-cta-left">
+          <div class="upgrade-cta-icon">&#128142;</div>
+          <div class="upgrade-cta-text">
+            <h3>Unlock Advanced Analytics, Team Insights & Integrations</h3>
+            <p>You've used 8 of 10 free meetings this month. Upgrade to Pro for unlimited meetings, sentiment analysis, and Jira/Notion sync.</p>
+          </div>
+        </div>
+        <button class="btn-upgrade">Upgrade to Pro &mdash; $12/mo</button>
+      </div>
+    </div>
+
+  </div><!-- /screens -->
+</div><!-- /app -->
+
+<script>
+// ================================================================
+// Navigation
+// ================================================================
+function switchScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  document.querySelector('[data-screen="' + name + '"]').classList.add('active');
+  // Re-trigger animations
+  const screen = document.getElementById('screen-' + name);
+  screen.querySelectorAll('.animate-in, .animate-in-scale').forEach(el => {
+    el.style.animation = 'none';
+    el.offsetHeight; // trigger reflow
+    el.style.animation = '';
+  });
+}
+
+document.querySelectorAll('.nav-tab').forEach(tab => {
+  tab.addEventListener('click', () => switchScreen(tab.dataset.screen));
+});
+
+// ================================================================
+// Recording Toggle
+// ================================================================
+let isRecording = false;
+let timerInterval = null;
+let seconds = 0;
+
+function toggleRecording() {
+  const btn = document.getElementById('recordBtn');
+  const label = document.getElementById('recordLabel');
+  const sub = document.getElementById('recordSub');
+  const timer = document.getElementById('recordTimer');
+  const waveform = document.getElementById('waveform');
+  const micIcon = btn.querySelector('.mic-icon');
+  const stopIcon = btn.querySelector('.stop-icon');
+
+  isRecording = !isRecording;
+
+  if (isRecording) {
+    btn.classList.add('is-recording');
+    waveform.classList.add('is-recording-view');
+    micIcon.style.display = 'none';
+    stopIcon.style.display = 'block';
+    label.textContent = 'Recording in Progress';
+    label.style.color = 'var(--red)';
+    sub.textContent = 'Capturing mic + system audio';
+    timer.style.display = 'block';
+    seconds = 0;
+    updateTimer();
+    timerInterval = setInterval(() => { seconds++; updateTimer(); }, 1000);
+  } else {
+    btn.classList.remove('is-recording');
+    waveform.classList.remove('is-recording-view');
+    micIcon.style.display = 'block';
+    stopIcon.style.display = 'none';
+    label.textContent = 'Processing...';
+    label.style.color = 'var(--accent-light)';
+    sub.textContent = 'Transcribing and generating notes';
+    clearInterval(timerInterval);
+    // Simulate processing
+    setTimeout(() => {
+      label.textContent = 'Ready to Record';
+      label.style.color = '';
+      sub.textContent = 'Click to start capturing your meeting';
+      timer.style.display = 'none';
+      switchScreen('results');
+    }, 1500);
+  }
+}
+
+function updateTimer() {
+  const h = String(Math.floor(seconds / 3600)).padStart(2, '0');
+  const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
+  const s = String(seconds % 60).padStart(2, '0');
+  document.getElementById('recordTimer').textContent = h + ':' + m + ':' + s;
+}
+
+// ================================================================
+// Period selector
+// ================================================================
+function setPeriod(btn) {
+  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ================================================================
+// Action item check toggles
+// ================================================================
+document.querySelectorAll('.action-check').forEach(check => {
+  check.addEventListener('click', () => {
+    check.classList.toggle('checked');
+    const text = check.nextElementSibling.querySelector('.action-text');
+    if (check.classList.contains('checked')) {
+      text.style.textDecoration = 'line-through';
+      text.style.opacity = '0.6';
+    } else {
+      text.style.textDecoration = '';
+      text.style.opacity = '';
+    }
+  });
+});
+</script>
+</body>
+</html>

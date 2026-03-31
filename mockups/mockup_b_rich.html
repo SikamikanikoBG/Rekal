@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rekal — Rich Design (Mockup B)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+--bg:#0F0F0F;--bg2:#1A1A1A;--bg3:#252525;--bg-h:#2A2A2A;
+--text:#F0F0F0;--text2:#888;--text3:#555;
+--accent:#818CF8;--accent-dim:#6366F1;--accent-soft:#1E1B4B;--accent-glow:rgba(129,140,248,.15);
+--rec:#F87171;--rec-soft:rgba(248,113,113,.12);
+--success:#34D399;--success-soft:rgba(52,211,153,.1);
+--warn:#FBBF24;--warn-soft:rgba(251,191,36,.1);
+--border:#2A2A2A;--border2:#1F1F1F;
+--radius:10px;--radius-sm:6px;--radius-full:9999px;
+--shadow:0 2px 8px rgba(0,0,0,.3);
+--font:'Inter',system-ui,-apple-system,sans-serif;
+--mono:'JetBrains Mono',monospace;
+--sidebar-w:240px;
+}
+html{font-size:14px}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column}
+
+/* Title Bar */
+.titlebar{height:38px;background:var(--bg2);border-bottom:1px solid var(--border2);display:flex;align-items:center;justify-content:space-between;padding:0 16px;-webkit-app-region:drag;flex-shrink:0}
+.titlebar-left{display:flex;align-items:center;gap:8px}
+.titlebar-logo{width:18px;height:18px;border-radius:4px;background:linear-gradient(135deg,var(--accent),#A78BFA);display:flex;align-items:center;justify-content:center}
+.titlebar-logo svg{width:10px;height:10px;color:#fff}
+.titlebar-title{font-size:12px;font-weight:500;color:var(--text2)}
+.titlebar-controls{display:flex;gap:12px;-webkit-app-region:no-drag}
+.titlebar-controls span{font-size:11px;color:var(--text3);cursor:pointer;padding:2px 6px;border-radius:3px}
+.titlebar-controls span:hover{background:var(--bg3);color:var(--text2)}
+.titlebar-controls .tc-close:hover{background:#E81123;color:#fff}
+
+/* App Shell */
+.app-shell{display:flex;flex:1;height:calc(100vh - 38px)}
+
+/* Sidebar */
+.sidebar{width:var(--sidebar-w);background:var(--bg2);border-right:1px solid var(--border2);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.sidebar::-webkit-scrollbar{width:4px}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+.sb-section{padding:12px}
+.sb-section-title{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);padding:0 8px;margin-bottom:6px}
+
+.sb-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--radius-sm);cursor:pointer;transition:all .15s;font-size:13px;color:var(--text2)}
+.sb-item:hover{background:var(--bg3);color:var(--text)}
+.sb-item.active{background:var(--accent-soft);color:var(--accent)}
+.sb-item svg{width:16px;height:16px;flex-shrink:0}
+.sb-item .badge{margin-left:auto;font-size:10px;font-weight:600;background:var(--accent-soft);color:var(--accent);padding:1px 6px;border-radius:var(--radius-full)}
+
+.sb-rec-btn{margin:8px 12px 12px;padding:10px;border-radius:var(--radius);border:1px dashed var(--border);background:transparent;color:var(--text2);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .25s}
+.sb-rec-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-glow)}
+.sb-rec-btn svg{width:16px;height:16px}
+.sb-rec-btn.recording{border-color:var(--rec);color:var(--rec);background:var(--rec-soft);border-style:solid;animation:recBtnPulse 2s ease infinite}
+@keyframes recBtnPulse{0%,100%{box-shadow:0 0 0 0 rgba(248,113,113,.2)}50%{box-shadow:0 0 0 6px rgba(248,113,113,0)}}
+
+.sb-footer{margin-top:auto;padding:12px;border-top:1px solid var(--border2)}
+.sb-footer-text{font-size:10px;color:var(--text3);display:flex;align-items:center;gap:4px;padding:4px 8px}
+.sb-footer-text svg{width:10px;height:10px}
+
+/* Dev Nav */
+.dev-nav{background:var(--bg2);border-bottom:1px solid var(--border2);padding:6px 16px;display:flex;gap:6px;flex-shrink:0}
+.dev-nav button{padding:5px 12px;border:1px solid var(--border);border-radius:var(--radius-full);background:transparent;font-family:var(--font);font-size:11px;font-weight:500;color:var(--text3);cursor:pointer;transition:all .2s}
+.dev-nav button:hover{border-color:var(--accent);color:var(--accent)}
+.dev-nav button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* Main Content */
+.content{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.content-body{flex:1;overflow-y:auto;padding:24px 28px}
+.content-body::-webkit-scrollbar{width:6px}
+.content-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+.screen{display:none;animation:fadeIn .35s ease}
+.screen.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ===== IDLE SCREEN ===== */
+.idle-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.idle-top h1{font-size:20px;font-weight:600}
+.idle-search{padding:8px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg3);color:var(--text2);font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer;transition:border .2s;min-width:220px}
+.idle-search:hover{border-color:var(--accent)}
+.idle-search svg{width:14px;height:14px}
+.idle-search .sk{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--text3)}
+
+/* Quick Stats */
+.quick-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px}
+.qs-card{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:16px}
+.qs-val{font-size:24px;font-weight:700;font-family:var(--mono);margin-bottom:2px}
+.qs-label{font-size:11px;color:var(--text3)}
+.qs-card:nth-child(1) .qs-val{color:var(--accent)}
+.qs-card:nth-child(2) .qs-val{color:var(--success)}
+.qs-card:nth-child(3) .qs-val{color:var(--warn)}
+.qs-card:nth-child(4) .qs-val{color:var(--rec)}
+
+/* Mic Hero */
+.mic-hero{text-align:center;padding:32px 0 36px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);margin-bottom:24px;position:relative;overflow:hidden}
+.mic-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center,var(--accent-glow),transparent 70%);opacity:.5}
+.mic-hero-content{position:relative;z-index:1}
+.mic-btn{width:72px;height:72px;border-radius:50%;border:none;background:linear-gradient(135deg,var(--accent-dim),var(--accent));color:#fff;cursor:pointer;position:relative;display:inline-flex;align-items:center;justify-content:center;transition:all .3s cubic-bezier(.34,1.56,.64,1);box-shadow:0 4px 24px rgba(99,102,241,.3)}
+.mic-btn:hover{transform:scale(1.1);box-shadow:0 6px 32px rgba(99,102,241,.45)}
+.mic-btn:active{transform:scale(.95)}
+.mic-btn svg{width:28px;height:28px}
+.mic-btn::after{content:'';position:absolute;inset:-5px;border-radius:50%;border:2px solid var(--accent);opacity:.2;animation:micPulse 2.5s ease-in-out infinite}
+@keyframes micPulse{0%,100%{transform:scale(1);opacity:.2}50%{transform:scale(1.12);opacity:0}}
+
+.mic-btn.recording{background:linear-gradient(135deg,#DC2626,var(--rec));box-shadow:0 4px 24px rgba(248,113,113,.35)}
+.mic-btn.recording::after{border-color:var(--rec);animation-duration:1s}
+
+.mic-label{font-size:13px;color:var(--text2);margin-top:12px}
+.mic-label .shortcut{font-family:var(--mono);font-size:10px;background:var(--bg3);border:1px solid var(--border);border-radius:3px;padding:1px 5px;margin-left:4px}
+
+.template-select{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--text3);margin-top:10px;cursor:pointer;padding:4px 10px;border-radius:var(--radius-full);border:1px solid var(--border);transition:all .2s}
+.template-select:hover{border-color:var(--accent);color:var(--accent)}
+.template-select svg{width:12px;height:12px}
+
+/* Meeting List */
+.list-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.list-header h2{font-size:14px;font-weight:600;color:var(--text2)}
+.list-header .view-toggle{display:flex;gap:2px}
+.list-header .view-toggle button{padding:4px 8px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;font-size:11px;transition:all .15s}
+.list-header .view-toggle button:first-child{border-radius:4px 0 0 4px}
+.list-header .view-toggle button:last-child{border-radius:0 4px 4px 0}
+.list-header .view-toggle button.active{background:var(--bg3);color:var(--text);border-color:var(--text3)}
+
+.mtg-table{width:100%;border-collapse:collapse}
+.mtg-table th{text-align:left;font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;padding:8px 12px;border-bottom:1px solid var(--border)}
+.mtg-table td{padding:12px;border-bottom:1px solid var(--border2);font-size:13px;transition:background .15s}
+.mtg-table tr:hover td{background:var(--bg3)}
+.mtg-table tr{cursor:pointer}
+.mtg-title{font-weight:500}
+.mtg-tag{font-size:10px;font-weight:600;padding:2px 7px;border-radius:var(--radius-full)}
+.mtg-tag.sprint{background:var(--accent-soft);color:var(--accent)}
+.mtg-tag.one-on-one{background:var(--success-soft);color:var(--success)}
+.mtg-tag.standup{background:var(--warn-soft);color:var(--warn)}
+.mtg-tag.sales{background:var(--rec-soft);color:var(--rec)}
+.mtg-dur{font-family:var(--mono);font-size:12px;color:var(--text2)}
+.mtg-date{font-size:12px;color:var(--text2)}
+.mtg-actions-col{font-size:12px;color:var(--text3);text-align:right}
+.mtg-actions-col span{padding:4px 8px;border-radius:4px;cursor:pointer;transition:all .15s}
+.mtg-actions-col span:hover{background:var(--bg-h);color:var(--text)}
+
+/* ===== RECORDING SCREEN ===== */
+.rec-panel{display:flex;gap:20px;height:100%}
+.rec-main{flex:1;display:flex;flex-direction:column;align-items:center;padding-top:48px}
+.rec-timer{font-family:var(--mono);font-size:64px;font-weight:700;letter-spacing:3px;background:linear-gradient(135deg,var(--text),var(--text2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.rec-status{display:flex;align-items:center;gap:8px;margin:8px 0 36px}
+.rec-dot{width:8px;height:8px;border-radius:50%;background:var(--rec);animation:blink 1s ease infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.rec-label{font-size:12px;font-weight:500;color:var(--rec)}
+
+/* Waveform */
+.waveform-container{width:100%;max-width:500px;margin-bottom:36px}
+.waveform-canvas{width:100%;height:80px;display:flex;align-items:center;justify-content:center;gap:2px}
+.wv-bar{width:3px;border-radius:2px;transition:height .15s ease}
+
+.rec-controls{display:flex;gap:10px;align-items:center}
+.rec-controls button{border:none;border-radius:var(--radius-full);font-family:var(--font);font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .2s}
+.btn-bm{padding:9px 18px;background:var(--bg3);border:1px solid var(--border) !important;color:var(--text2);font-size:12px}
+.btn-bm:hover{border-color:var(--accent) !important;color:var(--accent)}
+.btn-stop{padding:12px 28px;background:var(--rec);color:#fff;font-size:13px;box-shadow:0 4px 16px rgba(248,113,113,.25)}
+.btn-stop:hover{box-shadow:0 6px 24px rgba(248,113,113,.35)}
+.btn-stop svg,.btn-bm svg{width:14px;height:14px}
+
+.rec-sidebar{width:220px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;gap:12px}
+.rec-sidebar h3{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px}
+.rec-info{font-size:12px;color:var(--text2);display:flex;flex-direction:column;gap:6px}
+.rec-info div{display:flex;justify-content:space-between}
+.rec-info .ri-val{font-family:var(--mono);color:var(--text)}
+.rec-bookmarks{flex:1;overflow-y:auto}
+.rec-bm-item{font-size:12px;padding:6px 0;border-bottom:1px solid var(--border2);display:flex;gap:8px;color:var(--text2)}
+.rec-bm-item .bm-t{font-family:var(--mono);color:var(--accent);min-width:40px}
+
+/* ===== PROCESSING SCREEN ===== */
+.proc-layout{display:flex;gap:24px;padding-top:20px}
+.proc-main{flex:1;display:flex;flex-direction:column;align-items:center}
+
+.proc-orb{width:140px;height:140px;position:relative;margin-bottom:32px}
+.proc-orb-bg{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,var(--accent-glow),transparent);animation:orbPulse 3s ease infinite}
+@keyframes orbPulse{0%,100%{transform:scale(1);opacity:.5}50%{transform:scale(1.15);opacity:.8}}
+.proc-orb-ring{position:absolute;inset:10px;border-radius:50%;border:2px solid var(--border);overflow:hidden}
+.proc-orb-fill{position:absolute;inset:0;border:3px solid transparent;border-top-color:var(--accent);border-right-color:var(--accent);border-radius:50%;animation:spin 1.2s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.proc-orb-icon{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.proc-orb-icon svg{width:32px;height:32px;color:var(--accent)}
+.proc-pct{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--accent)}
+
+.proc-title{font-size:18px;font-weight:600;margin-bottom:4px}
+.proc-sub{font-size:13px;color:var(--text2);margin-bottom:28px}
+
+.proc-steps{width:100%;max-width:380px}
+.proc-step{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:var(--radius-sm);margin-bottom:4px;transition:background .2s}
+.proc-step.active{background:var(--bg3)}
+.proc-step .ps-icon{width:24px;height:24px;min-width:24px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center}
+.proc-step.done .ps-icon{background:var(--success);border-color:var(--success)}
+.proc-step.done .ps-icon svg{display:block}
+.proc-step.active .ps-icon{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.proc-step .ps-icon svg{width:12px;height:12px;color:#fff;display:none}
+.proc-step .ps-text{font-size:13px;color:var(--text3)}
+.proc-step.done .ps-text{color:var(--text2)}
+.proc-step.active .ps-text{color:var(--text);font-weight:500}
+.proc-step .ps-time{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--text3)}
+
+.proc-preview{width:280px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:16px;max-height:420px;overflow-y:auto}
+.proc-preview h3{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+.proc-preview-line{font-size:12px;line-height:1.7;color:var(--text3);margin-bottom:8px;padding-left:10px;border-left:2px solid var(--border)}
+.proc-preview-line.appearing{color:var(--text2);border-left-color:var(--accent);animation:typeIn .4s ease}
+@keyframes typeIn{from{opacity:0;transform:translateX(-4px)}to{opacity:1;transform:translateX(0)}}
+
+.proc-bottom{display:flex;align-items:center;gap:16px;margin-top:20px}
+.proc-elapsed{font-family:var(--mono);font-size:12px;color:var(--text3)}
+.proc-bg-link{font-size:12px;color:var(--accent);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+
+/* ===== RESULTS SCREEN ===== */
+.results-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px}
+.results-top h1{font-size:22px;font-weight:600;margin-bottom:6px}
+.results-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.results-meta span{font-size:12px;color:var(--text2);display:flex;align-items:center;gap:4px}
+.results-meta .tag{padding:2px 8px;border-radius:var(--radius-full);font-weight:600;font-size:10px}
+.results-actions{display:flex;gap:6px;flex-shrink:0}
+.results-actions button{padding:7px 14px;border-radius:var(--radius-sm);font-family:var(--font);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px;border:1px solid var(--border)}
+.results-actions button svg{width:14px;height:14px}
+.btn-accent{background:var(--accent);color:#fff;border-color:var(--accent) !important}
+.btn-accent:hover{opacity:.9}
+.btn-ghost{background:transparent;color:var(--text2)}
+.btn-ghost:hover{background:var(--bg3);color:var(--text)}
+
+/* Tabs */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:20px}
+.tab-btn{padding:10px 16px;border:none;background:none;font-family:var(--font);font-size:13px;font-weight:500;color:var(--text3);cursor:pointer;position:relative;transition:color .2s}
+.tab-btn:hover{color:var(--text2)}
+.tab-btn.active{color:var(--accent)}
+.tab-btn.active::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:2px;background:var(--accent);border-radius:1px}
+.tab-badge{font-size:10px;background:var(--accent-soft);color:var(--accent);padding:1px 6px;border-radius:9px;margin-left:4px}
+.tab-content{display:none;animation:fadeIn .3s ease}
+.tab-content.active{display:block}
+
+/* Summary */
+.summary-grid{display:grid;grid-template-columns:1fr 280px;gap:20px}
+.summary-main{}
+.summary-aside{}
+.sum-section{margin-bottom:20px}
+.sum-section h3{font-size:13px;font-weight:600;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.sum-section h3 svg{width:14px;height:14px;color:var(--accent)}
+.sum-text{font-size:14px;line-height:1.75;color:var(--text);background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:16px}
+.key-points{list-style:none}
+.key-points li{padding:8px 0;border-bottom:1px solid var(--border2);font-size:13px;line-height:1.65;display:flex;gap:8px;color:var(--text)}
+.key-points li:last-child{border:none}
+.kp-bullet{width:6px;min-width:6px;height:6px;border-radius:50%;background:var(--accent);margin-top:7px}
+.decision-tag{font-size:10px;font-weight:600;padding:1px 6px;border-radius:4px;background:rgba(99,102,241,.15);color:var(--accent);margin-left:4px;white-space:nowrap}
+
+/* Aside */
+.aside-card{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.aside-card h4{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+
+.participant{display:flex;align-items:center;gap:10px;padding:6px 0}
+.p-avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff}
+.p-info{flex:1;font-size:12px}.p-name{font-weight:500}.p-role{color:var(--text3);font-size:11px}
+.p-pct{font-family:var(--mono);font-size:12px;color:var(--text2)}
+
+.sentiment-bar{display:flex;height:8px;border-radius:4px;overflow:hidden;gap:2px;margin-top:4px}
+.sb-pos{background:var(--success);border-radius:4px}
+.sb-neu{background:var(--text3);border-radius:4px}
+.sb-neg{background:var(--rec);border-radius:4px;opacity:.7}
+.sentiment-legend{display:flex;gap:12px;margin-top:6px}
+.sentiment-legend span{font-size:10px;color:var(--text3);display:flex;align-items:center;gap:4px}
+.sentiment-legend .sdot{width:6px;height:6px;border-radius:50%}
+
+/* Action Items */
+.ai-list{display:flex;flex-direction:column;gap:2px}
+.action-item{display:flex;align-items:flex-start;gap:12px;padding:12px;border-radius:var(--radius-sm);transition:background .15s}
+.action-item:hover{background:var(--bg2)}
+.ai-check{width:18px;height:18px;min-width:18px;border-radius:4px;border:2px solid var(--border);cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.ai-check:hover{border-color:var(--accent)}
+.ai-check.checked{background:var(--success);border-color:var(--success)}
+.ai-check.checked svg{display:block}
+.ai-check svg{width:10px;height:10px;color:#fff;display:none}
+.ai-body{flex:1}
+.ai-text{font-size:13px;margin-bottom:4px;line-height:1.5}
+.ai-meta{display:flex;gap:8px;font-size:11px;color:var(--text3);align-items:center}
+.ai-assignee{color:var(--accent);font-weight:500}
+.ai-priority{font-size:10px;font-weight:600;padding:1px 6px;border-radius:var(--radius-full)}
+.ai-priority.high{background:var(--rec-soft);color:var(--rec)}
+.ai-priority.med{background:var(--warn-soft);color:var(--warn)}
+.ai-priority.low{background:var(--success-soft);color:var(--success)}
+
+/* Transcript */
+.transcript-toolbar{display:flex;gap:8px;margin-bottom:12px}
+.t-search{flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg2);color:var(--text);font-family:var(--font);font-size:12px;outline:none;transition:border .2s}
+.t-search:focus{border-color:var(--accent)}
+.t-search::placeholder{color:var(--text3)}
+
+.transcript-line{display:flex;gap:10px;padding:8px 12px;border-radius:var(--radius-sm);transition:background .15s}
+.transcript-line:hover{background:var(--bg2)}
+.tl-time{font-family:var(--mono);font-size:11px;color:var(--text3);min-width:42px;padding-top:2px}
+.tl-speaker{font-size:11px;font-weight:600;min-width:52px;padding-top:2px}
+.tl-s1{color:#818CF8}.tl-s2{color:#F472B6}.tl-s3{color:#FBBF24}.tl-s4{color:#A78BFA}
+.tl-text{font-size:13px;line-height:1.65;color:var(--text)}
+
+/* Charts */
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.chart-card{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:18px}
+.chart-card.full{grid-column:1/-1}
+.chart-card h3{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:14px}
+
+.pie-wrap{display:flex;align-items:center;gap:20px}
+.pie-svg{width:110px;height:110px}
+.pie-legend{display:flex;flex-direction:column;gap:6px}
+.pie-legend-item{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2)}
+.pl-dot{width:8px;height:8px;border-radius:50%}
+.pl-pct{font-family:var(--mono);font-weight:500;min-width:28px;color:var(--text)}
+
+.topic-timeline{display:flex;flex-direction:column;gap:6px}
+.tt-row{display:flex;align-items:center;gap:8px}
+.tt-label{font-size:11px;color:var(--text2);min-width:80px;text-align:right}
+.tt-track{flex:1;height:20px;background:var(--bg3);border-radius:3px;overflow:hidden;position:relative}
+.tt-fill{height:100%;border-radius:3px;display:flex;align-items:center;padding-left:6px}
+.tt-fill span{font-size:9px;font-weight:600;color:rgba(255,255,255,.8)}
+.tt-val{font-family:var(--mono);font-size:10px;color:var(--text3);min-width:32px}
+
+.stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.stat-item{padding:12px;background:var(--bg3);border-radius:var(--radius-sm)}
+.si-val{font-size:20px;font-weight:700;font-family:var(--mono)}
+.si-label{font-size:10px;color:var(--text3);margin-top:2px}
+
+/* Energy Timeline */
+.energy-timeline{height:60px;display:flex;align-items:flex-end;gap:2px;padding-top:8px}
+.et-bar{flex:1;border-radius:2px 2px 0 0;transition:height .3s ease;min-height:4px}
+.et-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-top:4px}
+</style>
+</head>
+<body>
+
+<!-- Title Bar -->
+<div class="titlebar">
+  <div class="titlebar-left">
+    <div class="titlebar-logo"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="9" y="1" width="6" height="12" rx="3"/></svg></div>
+    <span class="titlebar-title">Rekal</span>
+  </div>
+  <div class="titlebar-controls">
+    <span>&#x2013;</span>
+    <span>&#x25A1;</span>
+    <span class="tc-close">&#x2715;</span>
+  </div>
+</div>
+
+<div class="app-shell">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <button class="sb-rec-btn" id="sb-rec-btn" onclick="showScreen('recording')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="1" width="6" height="12" rx="3"/><path d="M19 10v1a7 7 0 01-14 0v-1"/></svg>
+      New Recording
+    </button>
+
+    <div class="sb-section">
+      <div class="sb-section-title">Navigate</div>
+      <div class="sb-item active" onclick="showScreen('idle')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+        Home
+      </div>
+      <div class="sb-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        Search
+        <span class="badge">Ctrl+K</span>
+      </div>
+      <div class="sb-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        Templates
+      </div>
+      <div class="sb-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        Settings
+      </div>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-section-title">Recent</div>
+      <div class="sb-item" onclick="showScreen('results')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Q1 Planning Review
+      </div>
+      <div class="sb-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        1:1 with Sarah
+      </div>
+      <div class="sb-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Daily Standup
+      </div>
+      <div class="sb-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Client — Acme Corp
+      </div>
+    </div>
+
+    <div class="sb-footer">
+      <div class="sb-footer-text">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        Local AI &middot; Data stays on-device
+      </div>
+    </div>
+  </aside>
+
+  <!-- Content -->
+  <div class="content">
+    <!-- Dev Nav -->
+    <nav class="dev-nav">
+      <button class="active" onclick="showScreen('idle')">Idle</button>
+      <button onclick="showScreen('recording')">Recording</button>
+      <button onclick="showScreen('processing')">Processing</button>
+      <button onclick="showScreen('results')">Results</button>
+    </nav>
+
+    <div class="content-body">
+
+      <!-- ===== IDLE ===== -->
+      <section class="screen active" id="screen-idle">
+        <div class="idle-top">
+          <h1>Welcome back</h1>
+          <div class="idle-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            Search all meetings...
+            <span class="sk">Ctrl+K</span>
+          </div>
+        </div>
+
+        <div class="quick-stats">
+          <div class="qs-card"><div class="qs-val">23</div><div class="qs-label">Meetings this month</div></div>
+          <div class="qs-card"><div class="qs-val">14.2h</div><div class="qs-label">Total time recorded</div></div>
+          <div class="qs-card"><div class="qs-val">47</div><div class="qs-label">Action items generated</div></div>
+          <div class="qs-card"><div class="qs-val">12</div><div class="qs-label">Items still open</div></div>
+        </div>
+
+        <div class="mic-hero">
+          <div class="mic-hero-content">
+            <button class="mic-btn" onclick="showScreen('recording')" aria-label="Start recording">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="1" width="6" height="12" rx="3"/><path d="M19 10v1a7 7 0 01-14 0v-1"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+            </button>
+            <div class="mic-label">Start recording <span class="shortcut">Ctrl+R</span></div>
+            <div class="template-select">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+              General Meeting
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="list-header">
+          <h2>Recent Meetings</h2>
+          <div class="view-toggle">
+            <button class="active">List</button>
+            <button>Grid</button>
+          </div>
+        </div>
+
+        <table class="mtg-table">
+          <thead><tr><th>Meeting</th><th>Template</th><th>Duration</th><th>Date</th><th></th></tr></thead>
+          <tbody>
+            <tr onclick="showScreen('results')"><td class="mtg-title">Q1 Planning Review</td><td><span class="mtg-tag sprint">Sprint Planning</span></td><td class="mtg-dur">47:12</td><td class="mtg-date">Mar 28</td><td class="mtg-actions-col"><span>View</span></td></tr>
+            <tr><td class="mtg-title">1:1 with Sarah — Perf Review Prep</td><td><span class="mtg-tag one-on-one">1:1</span></td><td class="mtg-dur">23:45</td><td class="mtg-date">Mar 27</td><td class="mtg-actions-col"><span>View</span></td></tr>
+            <tr><td class="mtg-title">Daily Standup</td><td><span class="mtg-tag standup">Standup</span></td><td class="mtg-dur">08:31</td><td class="mtg-date">Mar 27</td><td class="mtg-actions-col"><span>View</span></td></tr>
+            <tr><td class="mtg-title">Client Discovery — Acme Corp</td><td><span class="mtg-tag sales">Sales Call</span></td><td class="mtg-dur">35:07</td><td class="mtg-date">Mar 26</td><td class="mtg-actions-col"><span>View</span></td></tr>
+            <tr><td class="mtg-title">Engineering Retrospective</td><td><span class="mtg-tag sprint">Sprint Planning</span></td><td class="mtg-dur">31:22</td><td class="mtg-date">Mar 25</td><td class="mtg-actions-col"><span>View</span></td></tr>
+            <tr><td class="mtg-title">Product Roadmap Sync</td><td><span class="mtg-tag one-on-one">1:1</span></td><td class="mtg-dur">42:18</td><td class="mtg-date">Mar 24</td><td class="mtg-actions-col"><span>View</span></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- ===== RECORDING ===== -->
+      <section class="screen" id="screen-recording">
+        <div class="rec-panel">
+          <div class="rec-main">
+            <div class="rec-timer" id="rec-timer">12:34</div>
+            <div class="rec-status">
+              <span class="rec-dot"></span>
+              <span class="rec-label">Recording — Mic + System Audio</span>
+            </div>
+
+            <div class="waveform-container">
+              <div class="waveform-canvas" id="waveform"></div>
+            </div>
+
+            <div class="rec-controls">
+              <button class="btn-bm" onclick="addBookmark()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+                Bookmark
+              </button>
+              <button class="btn-stop" onclick="showScreen('processing')">
+                <svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+                Stop Recording
+              </button>
+            </div>
+          </div>
+
+          <div class="rec-sidebar">
+            <h3>Session Info</h3>
+            <div class="rec-info">
+              <div><span>Template</span><span class="ri-val">General</span></div>
+              <div><span>Mic</span><span class="ri-val">Default</span></div>
+              <div><span>System Audio</span><span class="ri-val">Active</span></div>
+              <div><span>File Size</span><span class="ri-val" id="file-size">18.4 MB</span></div>
+            </div>
+            <h3 style="margin-top:12px">Bookmarks</h3>
+            <div class="rec-bookmarks" id="bookmarks">
+              <div class="rec-bm-item"><span class="bm-t">03:21</span>Important point flagged</div>
+              <div class="rec-bm-item"><span class="bm-t">07:45</span>Decision made about scope</div>
+              <div class="rec-bm-item"><span class="bm-t">10:12</span>Action item assigned</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== PROCESSING ===== -->
+      <section class="screen" id="screen-processing">
+        <div class="proc-layout">
+          <div class="proc-main">
+            <div class="proc-orb">
+              <div class="proc-orb-bg"></div>
+              <div class="proc-orb-ring">
+                <div class="proc-orb-fill"></div>
+              </div>
+              <div class="proc-orb-icon">
+                <span class="proc-pct" id="proc-pct">67%</span>
+              </div>
+            </div>
+
+            <h2 class="proc-title">Processing your meeting</h2>
+            <p class="proc-sub">Estimated ~35 seconds remaining</p>
+
+            <div class="proc-steps">
+              <div class="proc-step done">
+                <div class="ps-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+                <span class="ps-text">Audio processed</span>
+                <span class="ps-time">4s</span>
+              </div>
+              <div class="proc-step done">
+                <div class="ps-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+                <span class="ps-text">Transcribed — 2,847 words</span>
+                <span class="ps-time">18s</span>
+              </div>
+              <div class="proc-step done">
+                <div class="ps-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+                <span class="ps-text">Speakers identified (4)</span>
+                <span class="ps-time">6s</span>
+              </div>
+              <div class="proc-step active">
+                <div class="ps-icon"></div>
+                <span class="ps-text">Generating summary...</span>
+                <span class="ps-time"></span>
+              </div>
+              <div class="proc-step">
+                <div class="ps-icon"></div>
+                <span class="ps-text">Extracting action items</span>
+                <span class="ps-time"></span>
+              </div>
+              <div class="proc-step">
+                <div class="ps-icon"></div>
+                <span class="ps-text">Building analytics</span>
+                <span class="ps-time"></span>
+              </div>
+            </div>
+
+            <div class="proc-bottom">
+              <span class="proc-elapsed">Elapsed: <span id="proc-time">32s</span></span>
+              <span class="proc-bg-link">Continue in background</span>
+            </div>
+          </div>
+
+          <div class="proc-preview">
+            <h3>Live Transcript Preview</h3>
+            <div class="proc-preview-line">Alright, let's get started. Thanks everyone for joining. We've got a packed agenda today...</div>
+            <div class="proc-preview-line">Sure. So engineering is currently at 78% on our Q1 OKRs. The main blocker has been the auth service refactor...</div>
+            <div class="proc-preview-line">What's the revised timeline looking like?</div>
+            <div class="proc-preview-line">We're looking at April 7th to start the migration. The auth service should be done by end of this week...</div>
+            <div class="proc-preview-line appearing">That's going to put a lot of pressure on testing. I'm already concerned about bandwidth...</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== RESULTS ===== -->
+      <section class="screen" id="screen-results">
+        <div class="results-top">
+          <div>
+            <h1>Q1 Planning Review</h1>
+            <div class="results-meta">
+              <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Mar 28, 2026</span>
+              <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> 47:12</span>
+              <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> 4 participants</span>
+              <span class="tag" style="background:var(--accent-soft);color:var(--accent)">Sprint Planning</span>
+            </div>
+          </div>
+          <div class="results-actions">
+            <button class="btn-accent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export</button>
+            <button class="btn-ghost"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy</button>
+          </div>
+        </div>
+
+        <div class="tabs">
+          <button class="tab-btn active" onclick="showTab('summary')">Summary</button>
+          <button class="tab-btn" onclick="showTab('actions')">Action Items <span class="tab-badge">5</span></button>
+          <button class="tab-btn" onclick="showTab('transcript')">Transcript</button>
+          <button class="tab-btn" onclick="showTab('charts')">Analytics</button>
+        </div>
+
+        <!-- Summary Tab -->
+        <div class="tab-content active" id="tab-summary">
+          <div class="summary-grid">
+            <div class="summary-main">
+              <div class="sum-section">
+                <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Overview</h3>
+                <div class="sum-text">The team reviewed Q1 progress against OKRs, with engineering at 78% completion and design at 92%. The main discussion centered on the delayed API migration, now rescheduled to start April 7. Sarah raised concerns about testing bandwidth, and the team agreed to bring in a contract QA engineer. Budget approval pending from David by end of week.</div>
+              </div>
+              <div class="sum-section">
+                <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Key Points</h3>
+                <ul class="key-points">
+                  <li><span class="kp-bullet"></span>Engineering OKRs at 78% — on track for Q1 targets with revised timeline</li>
+                  <li><span class="kp-bullet"></span>API migration postponed two weeks due to auth service dependency <span class="decision-tag">Decision</span></li>
+                  <li><span class="kp-bullet"></span>Contract QA engineer approved for next sprint <span class="decision-tag">Decision</span></li>
+                  <li><span class="kp-bullet"></span>Design system v2 ahead of schedule, demo planned for next Friday</li>
+                  <li><span class="kp-bullet"></span>SMB churn flagged as a risk — analysis forthcoming</li>
+                </ul>
+              </div>
+            </div>
+            <div class="summary-aside">
+              <div class="aside-card">
+                <h4>Participants</h4>
+                <div class="participant"><div class="p-avatar" style="background:#6366F1">Y</div><div class="p-info"><div class="p-name">You</div><div class="p-role">Facilitator</div></div><div class="p-pct">35%</div></div>
+                <div class="participant"><div class="p-avatar" style="background:#EC4899">S</div><div class="p-info"><div class="p-name">Sarah</div><div class="p-role">Design Lead</div></div><div class="p-pct">28%</div></div>
+                <div class="participant"><div class="p-avatar" style="background:#F59E0B">M</div><div class="p-info"><div class="p-name">Marcus</div><div class="p-role">Eng Lead</div></div><div class="p-pct">22%</div></div>
+                <div class="participant"><div class="p-avatar" style="background:#8B5CF6">D</div><div class="p-info"><div class="p-name">David</div><div class="p-role">Finance</div></div><div class="p-pct">15%</div></div>
+              </div>
+              <div class="aside-card">
+                <h4>Sentiment</h4>
+                <div class="sentiment-bar">
+                  <div class="sb-pos" style="width:62%"></div>
+                  <div class="sb-neu" style="width:30%"></div>
+                  <div class="sb-neg" style="width:8%"></div>
+                </div>
+                <div class="sentiment-legend">
+                  <span><span class="sdot" style="background:var(--success)"></span>Positive 62%</span>
+                  <span><span class="sdot" style="background:var(--text3)"></span>Neutral 30%</span>
+                  <span><span class="sdot" style="background:var(--rec)"></span>Concern 8%</span>
+                </div>
+              </div>
+              <div class="aside-card">
+                <h4>Quick Export</h4>
+                <div style="display:flex;flex-direction:column;gap:6px">
+                  <button class="btn-ghost" style="width:100%;justify-content:center;border:1px solid var(--border);padding:8px;font-size:12px;border-radius:var(--radius-sm)">Markdown (.md)</button>
+                  <button class="btn-ghost" style="width:100%;justify-content:center;border:1px solid var(--border);padding:8px;font-size:12px;border-radius:var(--radius-sm)">PDF Document</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions Tab -->
+        <div class="tab-content" id="tab-actions">
+          <div class="ai-list">
+            <div class="action-item">
+              <div class="ai-check" onclick="this.classList.toggle('checked')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div class="ai-body"><div class="ai-text">Get budget approval for contract QA engineer and send offer letter</div><div class="ai-meta"><span class="ai-assignee">@David</span><span>Due: Mar 31</span><span class="ai-priority high">High</span></div></div>
+            </div>
+            <div class="action-item">
+              <div class="ai-check" onclick="this.classList.toggle('checked')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div class="ai-body"><div class="ai-text">Update API migration timeline in Jira and notify dependent teams</div><div class="ai-meta"><span class="ai-assignee">@Marcus</span><span>Due: Mar 30</span><span class="ai-priority high">High</span></div></div>
+            </div>
+            <div class="action-item">
+              <div class="ai-check" onclick="this.classList.toggle('checked')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div class="ai-body"><div class="ai-text">Prepare SMB churn analysis presentation for next planning meeting</div><div class="ai-meta"><span class="ai-assignee">@Alex</span><span>Due: Apr 4</span><span class="ai-priority med">Medium</span></div></div>
+            </div>
+            <div class="action-item">
+              <div class="ai-check" onclick="this.classList.toggle('checked')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div class="ai-body"><div class="ai-text">Schedule design system v2 demo for Friday, send calendar invites</div><div class="ai-meta"><span class="ai-assignee">@Sarah</span><span>Due: Apr 1</span><span class="ai-priority med">Medium</span></div></div>
+            </div>
+            <div class="action-item">
+              <div class="ai-check checked" onclick="this.classList.toggle('checked')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div class="ai-body"><div class="ai-text" style="text-decoration:line-through;opacity:.5">Share the updated Q1 OKR spreadsheet with the full team</div><div class="ai-meta"><span class="ai-assignee">@You</span><span>Due: Mar 28</span><span class="ai-priority low">Low</span></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Transcript Tab -->
+        <div class="tab-content" id="tab-transcript">
+          <div class="transcript-toolbar">
+            <input class="t-search" type="text" placeholder="Search transcript...">
+          </div>
+          <div class="transcript-line"><span class="tl-time">00:00</span><span class="tl-speaker tl-s1">You</span><span class="tl-text">Alright, let's get started. Thanks everyone for joining. We've got a packed agenda today — mainly looking at Q1 progress and figuring out where we stand on the big milestones.</span></div>
+          <div class="transcript-line"><span class="tl-time">00:18</span><span class="tl-speaker tl-s2">Sarah</span><span class="tl-text">Sounds good. I actually have an update on the design system rollout if we can squeeze that in.</span></div>
+          <div class="transcript-line"><span class="tl-time">00:24</span><span class="tl-speaker tl-s1">You</span><span class="tl-text">Absolutely, let's add that after the OKR review. Marcus, want to kick us off with engineering?</span></div>
+          <div class="transcript-line"><span class="tl-time">00:31</span><span class="tl-speaker tl-s3">Marcus</span><span class="tl-text">Sure. So engineering is currently at 78% on our Q1 OKRs. The main blocker has been the auth service refactor — it's taken about two weeks longer than we estimated, and that's pushed back the API migration.</span></div>
+          <div class="transcript-line"><span class="tl-time">00:52</span><span class="tl-speaker tl-s1">You</span><span class="tl-text">What's the revised timeline looking like?</span></div>
+          <div class="transcript-line"><span class="tl-time">00:55</span><span class="tl-speaker tl-s3">Marcus</span><span class="tl-text">We're looking at April 7th to start the migration. The auth service should be done by end of this week, then we need a few days for integration testing before we kick off the migration itself.</span></div>
+          <div class="transcript-line"><span class="tl-time">01:12</span><span class="tl-speaker tl-s2">Sarah</span><span class="tl-text">That's going to put a lot of pressure on testing. I'm already concerned about bandwidth — my team is fully allocated with the v2 design system work and the regular sprint tickets.</span></div>
+          <div class="transcript-line"><span class="tl-time">01:28</span><span class="tl-speaker tl-s1">You</span><span class="tl-text">Good point. What if we brought in a contract QA engineer for the sprint? David, is that something the budget could handle?</span></div>
+          <div class="transcript-line"><span class="tl-time">01:38</span><span class="tl-speaker tl-s4">David</span><span class="tl-text">Let me check the numbers, but I think we have room in the contingency budget. I can confirm by end of week and get an offer letter out if it looks good.</span></div>
+        </div>
+
+        <!-- Charts Tab -->
+        <div class="tab-content" id="tab-charts">
+          <div class="charts-grid">
+            <div class="chart-card">
+              <h3>Talk Time Distribution</h3>
+              <div class="pie-wrap">
+                <svg class="pie-svg" viewBox="0 0 36 36">
+                  <circle cx="18" cy="18" r="15.915" fill="none" stroke="#2A2A2A" stroke-width="3"/>
+                  <circle cx="18" cy="18" r="15.915" fill="none" stroke="#818CF8" stroke-width="3.5" stroke-dasharray="35 65" stroke-dashoffset="25" stroke-linecap="round"/>
+                  <circle cx="18" cy="18" r="15.915" fill="none" stroke="#F472B6" stroke-width="3.5" stroke-dasharray="28 72" stroke-dashoffset="-10" stroke-linecap="round"/>
+                  <circle cx="18" cy="18" r="15.915" fill="none" stroke="#FBBF24" stroke-width="3.5" stroke-dasharray="22 78" stroke-dashoffset="-38" stroke-linecap="round"/>
+                  <circle cx="18" cy="18" r="15.915" fill="none" stroke="#A78BFA" stroke-width="3.5" stroke-dasharray="15 85" stroke-dashoffset="-60" stroke-linecap="round"/>
+                </svg>
+                <div class="pie-legend">
+                  <div class="pie-legend-item"><span class="pl-dot" style="background:#818CF8"></span><span class="pl-pct">35%</span>You</div>
+                  <div class="pie-legend-item"><span class="pl-dot" style="background:#F472B6"></span><span class="pl-pct">28%</span>Sarah</div>
+                  <div class="pie-legend-item"><span class="pl-dot" style="background:#FBBF24"></span><span class="pl-pct">22%</span>Marcus</div>
+                  <div class="pie-legend-item"><span class="pl-dot" style="background:#A78BFA"></span><span class="pl-pct">15%</span>David</div>
+                </div>
+              </div>
+            </div>
+            <div class="chart-card">
+              <h3>Meeting Stats</h3>
+              <div class="stat-grid">
+                <div class="stat-item"><div class="si-val" style="color:var(--accent)">47:12</div><div class="si-label">Duration</div></div>
+                <div class="stat-item"><div class="si-val" style="color:var(--success)">2,847</div><div class="si-label">Words spoken</div></div>
+                <div class="stat-item"><div class="si-val" style="color:var(--warn)">5</div><div class="si-label">Action items</div></div>
+                <div class="stat-item"><div class="si-val" style="color:var(--rec)">3</div><div class="si-label">Decisions</div></div>
+              </div>
+            </div>
+            <div class="chart-card full">
+              <h3>Topic Timeline</h3>
+              <div class="topic-timeline">
+                <div class="tt-row"><span class="tt-label">OKR Review</span><div class="tt-track"><div class="tt-fill" style="width:38%;background:#818CF8"><span>18 min</span></div></div><div class="tt-val">38%</div></div>
+                <div class="tt-row"><span class="tt-label">API Migration</span><div class="tt-track"><div class="tt-fill" style="width:25%;background:#F472B6"><span>12 min</span></div></div><div class="tt-val">25%</div></div>
+                <div class="tt-row"><span class="tt-label">QA Staffing</span><div class="tt-track"><div class="tt-fill" style="width:17%;background:#FBBF24"><span>8 min</span></div></div><div class="tt-val">17%</div></div>
+                <div class="tt-row"><span class="tt-label">Design System</span><div class="tt-track"><div class="tt-fill" style="width:13%;background:#A78BFA"><span>6 min</span></div></div><div class="tt-val">13%</div></div>
+                <div class="tt-row"><span class="tt-label">SMB Churn</span><div class="tt-track"><div class="tt-fill" style="width:7%;background:#34D399"><span>3 min</span></div></div><div class="tt-val">7%</div></div>
+              </div>
+            </div>
+            <div class="chart-card full">
+              <h3>Conversation Energy Over Time</h3>
+              <div class="energy-timeline" id="energy-timeline"></div>
+              <div class="et-labels"><span>0:00</span><span>10:00</span><span>20:00</span><span>30:00</span><span>40:00</span><span>47:12</span></div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// Screen nav
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  document.querySelectorAll('.dev-nav button').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.dev-nav button').forEach(b => {
+    if (b.textContent.trim().toLowerCase().startsWith(name)) b.classList.add('active');
+  });
+  // Update sidebar rec button state
+  const sbBtn = document.getElementById('sb-rec-btn');
+  if (name === 'recording') {
+    sbBtn.classList.add('recording');
+    sbBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><rect x="6" y="6" width="12" height="12" rx="2"/></svg> Recording... 12:34';
+  } else {
+    sbBtn.classList.remove('recording');
+    sbBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="1" width="6" height="12" rx="3"/><path d="M19 10v1a7 7 0 01-14 0v-1"/></svg> New Recording';
+  }
+  // Update sidebar active item
+  document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
+  if (name === 'idle') document.querySelectorAll('.sb-item')[0].classList.add('active');
+}
+
+// Tab nav
+function showTab(name) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  event.target.closest('.tab-btn').classList.add('active');
+}
+
+// Waveform
+const waveform = document.getElementById('waveform');
+const barCount = 64;
+const bars = [];
+for (let i = 0; i < barCount; i++) {
+  const bar = document.createElement('div');
+  bar.className = 'wv-bar';
+  bar.style.background = `hsl(${230 + (i/barCount)*30}, 70%, 65%)`;
+  bar.style.height = '4px';
+  waveform.appendChild(bar);
+  bars.push(bar);
+}
+function animateWave() {
+  const t = Date.now() / 1000;
+  bars.forEach((bar, i) => {
+    const h = 6 + Math.abs(Math.sin(t * 2 + i * .2) * 28 + Math.sin(t * 3.5 + i * .15) * 18 + Math.random() * 8);
+    bar.style.height = h + 'px';
+  });
+  requestAnimationFrame(animateWave);
+}
+animateWave();
+
+// Timer
+let recSec = 754;
+setInterval(() => {
+  recSec++;
+  const m = String(Math.floor(recSec / 60)).padStart(2, '0');
+  const s = String(recSec % 60).padStart(2, '0');
+  document.getElementById('rec-timer').textContent = m + ':' + s;
+}, 1000);
+
+// Processing
+let procSec = 32;
+let procPct = 67;
+setInterval(() => {
+  procSec++;
+  if (procPct < 95) procPct++;
+  document.getElementById('proc-time').textContent = procSec + 's';
+  document.getElementById('proc-pct').textContent = procPct + '%';
+}, 1000);
+
+// Bookmark
+function addBookmark() {
+  const m = String(Math.floor(recSec / 60)).padStart(2, '0');
+  const s = String(recSec % 60).padStart(2, '0');
+  const bm = document.createElement('div');
+  bm.className = 'rec-bm-item';
+  bm.innerHTML = '<span class="bm-t">' + m + ':' + s + '</span>Bookmark added';
+  document.getElementById('bookmarks').appendChild(bm);
+}
+
+// Energy timeline chart
+const etContainer = document.getElementById('energy-timeline');
+const energyData = [35,42,55,48,62,70,58,72,80,65,78,85,60,45,50,68,75,82,90,72,55,48,62,70,58,65,78,72,85,68,50,42,55,48,62,70,75,68,55,42,30,35,45,50,38,25];
+energyData.forEach((val, i) => {
+  const bar = document.createElement('div');
+  bar.className = 'et-bar';
+  const hue = val > 70 ? '258' : val > 45 ? '220' : '200';
+  const light = val > 70 ? '65' : val > 45 ? '50' : '35';
+  bar.style.background = `hsl(${hue}, 60%, ${light}%)`;
+  bar.style.height = val + '%';
+  etContainer.appendChild(bar);
+});
+</script>
+</body>
+</html>
