@@ -323,6 +323,30 @@ npm run dev
 | `npm run build:mcp` | Build MCP server only |
 | `npm run mcp` | Run MCP server (stdio) |
 
+### Building Executables
+
+Rekal can be packaged as standalone Windows executables — no Node.js or dev tools required on the target machine.
+
+```bash
+# Build everything (installer + portable)
+npm run package
+
+# Or build specific targets:
+npx electron-builder --win nsis       # NSIS installer (.exe)
+npx electron-builder --win portable   # Single portable .exe
+```
+
+Output goes to the `release/` folder:
+
+| File | Size | Description |
+|------|------|-------------|
+| `Rekal-Setup-0.1.0.exe` | ~87 MB | **Installer** — installs to `%LOCALAPPDATA%`, no admin rights needed. Creates desktop & Start Menu shortcuts. Includes uninstaller. |
+| `Rekal-Portable-0.1.0.exe` | ~78 MB | **Portable** — single file, no installation. Copy to USB, network share, or any folder and double-click to run. |
+
+**For enterprise/corporate laptops:** Use the portable `.exe` — zero installation, no registry changes, no admin permissions required. Just copy and run.
+
+> **Note:** The executables are not code-signed. Windows SmartScreen may show a warning on first launch — click "More info" → "Run anyway". For production distribution, add a code signing certificate in `electron-builder.yml`.
+
 ---
 
 ## Contributing
