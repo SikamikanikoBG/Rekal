@@ -88,20 +88,19 @@ function createWindow(): void {
     height: 700,
     minWidth: 700,
     minHeight: 500,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: '#0A0A0B',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: true,
     },
   });
 
   const rendererPath = path.join(__dirname, '..', '..', 'renderer', 'index.html');
-  const isDev = process.env.NODE_ENV === 'development';
-  const useDevServer = isDev && process.env.VITE_DEV === '1';
+  const isDev = !app.isPackaged;
+  const useDevServer = process.env.VITE_DEV === '1';
 
-  if (isDev) {
+  if (isDev && !useDevServer) {
     mainWindow.webContents.openDevTools({ mode: 'detach' });
   }
 
@@ -110,6 +109,15 @@ function createWindow(): void {
   } else {
     mainWindow.loadFile(rendererPath);
   }
+
+  // Log renderer loading errors
+  mainWindow.webContents.on('did-fail-load', (_event, errorCode, errorDescription) => {
+    logger.error('Renderer failed to load', { errorCode, errorDescription, rendererPath });
+  });
+
+  mainWindow.webContents.on('did-finish-load', () => {
+    logger.info('Renderer loaded successfully');
+  });
 }
 
 function createTray(): void {
@@ -628,11 +636,11 @@ function setupCSP(): void {
       responseHeaders: {
         ...details.responseHeaders,
         'Content-Security-Policy': [
-          "default-src 'self'",
-          "script-src 'self'",
-          "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+          "default-src 'self' file:",
+          "script-src 'self' file:",
+          "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com file:",
           "connect-src 'self' http://localhost:* https://*.openai.com https://*.anthropic.com https://*.azure.com",
-          "img-src 'self' data:",
+          "img-src 'self' data: file:",
           "font-src 'self' https://fonts.gstatic.com",
         ].join('; ')
       }
