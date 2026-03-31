@@ -25,6 +25,7 @@ type Block =
   | { type: 'heading'; level: number; content: string }
   | { type: 'code-block'; language: string; content: string }
   | { type: 'list'; ordered: boolean; items: string[] }
+  | { type: 'table'; headers: string[]; alignments: ('left' | 'center' | 'right')[]; rows: string[][] }
   | { type: 'hr' };
 
 function parseBlocks(text: string): Block[] {
@@ -61,6 +62,26 @@ function parseBlocks(text: string): Block[] {
     if (/^[-*_]{3,}\s*$/.test(line.trim())) {
       blocks.push({ type: 'hr' });
       i++;
+      continue;
+    }
+
+    // Table: line with pipes, followed by separator row (|---|---|)
+    if (line.includes('|') && i + 1 < lines.length && /^\s*\|?\s*[-:]+[-|\s:]+\s*\|?\s*$/.test(lines[i + 1])) {
+      const parseRow = (row: string) => row.replace(/^\s*\|/, '').replace(/\|\s*$/, '').split('|').map(c => c.trim());
+      const headers = parseRow(line);
+      const sepCells = parseRow(lines[i + 1]);
+      const alignments = sepCells.map(c => {
+        if (c.startsWith(':') && c.endsWith(':')) return 'center' as const;
+        if (c.endsWith(':')) return 'right' as const;
+        return 'left' as const;
+      });
+      i += 2; // skip header + separator
+      const rows: string[][] = [];
+      while (i < lines.length && lines[i].includes('|')) {
+        rows.push(parseRow(lines[i]));
+        i++;
+      }
+      blocks.push({ type: 'table', headers, alignments, rows });
       continue;
     }
 
@@ -131,6 +152,29 @@ function renderBlock(block: Block, key: number): React.ReactNode {
             <li key={j} style={{ fontSize: 14 }}>{renderInline(item)}</li>
           ))}
         </Tag>
+      );
+    case 'table':
+      return (
+        <div key={key} style={{ overflowX: 'auto', margin: '8px 0' }}>
+          <table style={tableStyle}>
+            <thead>
+              <tr>
+                {block.headers.map((h, j) => (
+                  <th key={j} style={{ ...thStyle, textAlign: block.alignments[j] || 'left' }}>{renderInline(h)}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {block.rows.map((row, ri) => (
+                <tr key={ri} style={ri % 2 === 1 ? trAltStyle : undefined}>
+                  {row.map((cell, ci) => (
+                    <td key={ci} style={{ ...tdStyle, textAlign: block.alignments[ci] || 'left' }}>{renderInline(cell)}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       );
     case 'hr':
       return <hr key={key} style={{ border: 'none', borderTop: '1px solid var(--border)', margin: '12px 0' }} />;
@@ -207,6 +251,30 @@ const codeBlockStyle: React.CSSProperties = {
   margin: '8px 0',
   whiteSpace: 'pre-wrap',
   wordBreak: 'break-word',
+};
+
+const tableStyle: React.CSSProperties = {
+  width: '100%',
+  borderCollapse: 'collapse',
+  fontSize: 13,
+  lineHeight: 1.5,
+};
+
+const thStyle: React.CSSProperties = {
+  padding: '8px 12px',
+  fontWeight: 600,
+  borderBottom: '2px solid var(--border, #333)',
+  background: 'var(--bg, #1a1a1d)',
+  whiteSpace: 'nowrap',
+};
+
+const tdStyle: React.CSSProperties = {
+  padding: '6px 12px',
+  borderBottom: '1px solid var(--border, #333)',
+};
+
+const trAltStyle: React.CSSProperties = {
+  background: 'rgba(255,255,255,0.02)',
 };
 
 const inlineCodeStyle: React.CSSProperties = {
