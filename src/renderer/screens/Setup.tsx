@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 interface Props {
-  onComplete: (ollamaModel: string) => void;
+  onComplete: () => void;
 }
 
 interface DepStatus {
@@ -19,7 +19,7 @@ interface ScanResult {
   ollamaModels: string[];
 }
 
-type Phase = 'scanning' | 'results' | 'installing' | 'pick-model' | 'ready';
+type Phase = 'scanning' | 'results' | 'installing' | 'ready';
 
 export function Setup({ onComplete }: Props) {
   const [phase, setPhase] = useState<Phase>('scanning');
@@ -27,7 +27,6 @@ export function Setup({ onComplete }: Props) {
   const [installProgress, setInstallProgress] = useState({ step: '', detail: '', percent: 0 });
   const [error, setError] = useState('');
   const [models, setModels] = useState<string[]>([]);
-  const [selectedModel, setSelectedModel] = useState('');
 
   useEffect(() => {
     runScan();
@@ -43,8 +42,8 @@ export function Setup({ onComplete }: Props) {
       const allReady = result.whisperBin.found && result.whisperModel.found && result.ollama.found;
 
       if (allReady && result.ollamaModels.length > 0) {
-        setModels(result.ollamaModels);
-        setPhase('pick-model');
+        onComplete();
+        return;
       } else {
         setPhase('results');
       }
@@ -69,16 +68,12 @@ export function Setup({ onComplete }: Props) {
       const newScan = await window.api.scanDependencies();
       setScan(newScan);
       setModels(newScan.ollamaModels);
-      setPhase(newScan.ollamaModels.length > 0 ? 'pick-model' : 'results');
+      if (newScan.ollamaModels.length > 0) { onComplete(); return; }
+      setPhase('results');
     } else {
       setError(result.error || 'Installation failed');
       setPhase('results');
     }
-  }
-
-  async function refreshModels() {
-    const m = await window.api.getOllamaModels();
-    setModels(m);
   }
 
   const whisperReady = scan ? scan.whisperBin.found && scan.whisperModel.found : false;
@@ -146,10 +141,7 @@ export function Setup({ onComplete }: Props) {
                   </div>
                 )}
                 {scan.ollamaModels.length > 0 && whisperReady && (
-                  <button className="btn btn-primary" onClick={() => {
-                    setModels(scan.ollamaModels);
-                    setPhase('pick-model');
-                  }}>
+                  <button className="btn btn-primary" onClick={() => onComplete()}>
                     Continue
                   </button>
                 )}
@@ -158,10 +150,7 @@ export function Setup({ onComplete }: Props) {
                   <button
                     className="btn btn-ghost"
                     style={{ fontSize: 12, color: 'var(--text-tertiary)' }}
-                    onClick={() => {
-                      setModels(scan.ollamaModels);
-                      setPhase('pick-model');
-                    }}
+                    onClick={() => onComplete()}
                   >
                     Skip — set up whisper later
                   </button>
@@ -171,49 +160,6 @@ export function Setup({ onComplete }: Props) {
           </div>
         )}
 
-        {/* Model picker */}
-        {phase === 'pick-model' && (
-          <div style={styles.section} className="fade-in">
-            <h3 style={styles.sectionTitle}>Choose your Ollama model</h3>
-            <p style={styles.hint}>This model generates your meeting notes.</p>
-
-            {models.length > 0 ? (
-              <div style={styles.modelList}>
-                {models.map((m) => (
-                  <button
-                    key={m}
-                    style={{
-                      ...styles.modelBtn,
-                      ...(selectedModel === m ? styles.modelBtnActive : {}),
-                    }}
-                    onClick={() => setSelectedModel(m)}
-                  >
-                    <span style={styles.modelName}>{m}</span>
-                    {selectedModel === m && <span style={styles.check}>✓</span>}
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <div style={styles.emptyModels}>
-                <p style={styles.hint}>No models found. Pull one in your terminal:</p>
-                <code style={styles.code}>ollama pull mistral</code>
-                <button className="btn btn-ghost" style={{ marginTop: 12 }} onClick={refreshModels}>
-                  Refresh
-                </button>
-              </div>
-            )}
-
-            {selectedModel && (
-              <button
-                className="btn btn-primary"
-                style={{ marginTop: 20, width: '100%' }}
-                onClick={() => onComplete(selectedModel)}
-              >
-                Start using Rekal
-              </button>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );
@@ -274,16 +220,6 @@ const styles: Record<string, React.CSSProperties> = {
   progressDetail: { fontSize: 12, color: 'var(--text-secondary)' },
   progressBar: { height: 6, background: 'var(--border)', borderRadius: 3, overflow: 'hidden', marginTop: 4 },
   progressFill: { height: '100%', background: 'var(--accent)', borderRadius: 3, transition: 'width 300ms ease' },
-  modelList: { display: 'flex', flexDirection: 'column', gap: 6, marginTop: 12, maxHeight: 240, overflowY: 'auto' },
-  modelBtn: {
-    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    padding: '12px 14px', borderRadius: 'var(--radius-sm)',
-    border: '1px solid var(--border)', background: 'var(--bg)',
-    cursor: 'pointer', transition: 'all 150ms',
-  },
-  modelBtnActive: { borderColor: 'var(--accent)', background: 'var(--accent-light)' },
-  modelName: { fontFamily: 'var(--font-mono)', fontSize: 13, fontWeight: 500 },
-  check: { color: 'var(--accent)', fontWeight: 700 },
   emptyModels: { textAlign: 'center', padding: '20px 0' },
   code: {
     display: 'inline-block', background: 'var(--bg)',

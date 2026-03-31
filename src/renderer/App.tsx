@@ -181,7 +181,7 @@ export default function App() {
           // Full-screen experiences: Setup, Recording, Processing
           <>
             {state.screen === 'setup' && (
-              <Setup onComplete={(summarizationModel) => update({ screen: 'dashboard', summarizationModel, activeNav: 'dashboard' })} />
+              <Setup onComplete={() => update({ screen: 'dashboard', activeNav: 'dashboard' })} />
             )}
             {state.screen === 'recording' && (
               <Recording

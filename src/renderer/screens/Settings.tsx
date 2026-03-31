@@ -24,11 +24,32 @@ export function Settings({ onSave, onBack }: Props) {
   const [ollamaUrlSaved, setOllamaUrlSaved] = useState(false);
   const [ollamaTestLoading, setOllamaTestLoading] = useState(false);
   const [ollamaTestResult, setOllamaTestResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [ollamaModels, setOllamaModels] = useState<string[]>([]);
+  const [selectedModel, setSelectedModel] = useState('');
+  const [modelSaved, setModelSaved] = useState(false);
 
   useEffect(() => {
-    window.api.getConfig().then((cfg: any) => setKeys(cfg.apiKeys || {}));
+    window.api.getConfig().then((cfg: any) => {
+      setKeys(cfg.apiKeys || {});
+      setSelectedModel(cfg.summarizationModel || '');
+    });
     window.api.getOllamaUrl().then((url: string) => setOllamaUrl(url));
+    loadOllamaModels();
   }, []);
+
+  async function loadOllamaModels() {
+    try {
+      const models = await window.api.getOllamaModels();
+      setOllamaModels(models);
+    } catch { /* Ollama may not be running */ }
+  }
+
+  async function saveModel(model: string) {
+    setSelectedModel(model);
+    await window.api.setConfig({ summarizationModel: model });
+    setModelSaved(true);
+    setTimeout(() => setModelSaved(false), 1500);
+  }
 
   async function saveKey(key: keyof ApiKeys, value: string) {
     setKeys((k) => ({ ...k, [key]: value }));
@@ -95,6 +116,25 @@ export function Settings({ onSave, onBack }: Props) {
               {ollamaTestResult.success ? `\u2713 ${ollamaTestResult.message}` : `\u2717 ${ollamaTestResult.message}`}
             </span>
           )}
+        </div>
+        <div style={styles.keyRow}>
+          <label style={styles.keyLabel}>Summarization Model</label>
+          <div style={styles.keyInputWrap}>
+            <select
+              value={selectedModel}
+              onChange={(e) => saveModel(e.target.value)}
+              style={{ ...styles.keyInput, cursor: 'pointer' }}
+            >
+              <option value="">Select a model...</option>
+              {ollamaModels.map((m) => (
+                <option key={m} value={m}>{m}</option>
+              ))}
+            </select>
+            <button className="btn btn-ghost" style={{ fontSize: 11, padding: '4px 8px' }} onClick={loadOllamaModels}>
+              ↻
+            </button>
+            {modelSaved && <span style={styles.savedBadge}>Saved</span>}
+          </div>
         </div>
       </Section>
 
