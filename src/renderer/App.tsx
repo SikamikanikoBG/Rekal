@@ -192,11 +192,6 @@ export default function App() {
             {state.screen === 'processing' && (
               <Processing
                 audioPath={state.audioPath!}
-                transcriptionProvider={state.transcriptionProvider}
-                transcriptionModel={state.transcriptionModel}
-                summarizationProvider={state.summarizationProvider}
-                summarizationModel={state.summarizationModel}
-                language={state.language}
                 onComplete={handleProcessingComplete}
                 onError={() => setScreen('dashboard')}
               />
@@ -214,14 +209,6 @@ export default function App() {
             <div style={layoutStyles.main}>
               {state.screen === 'idle' && (
                 <Idle
-                  language={state.language}
-                  transcriptionProvider={state.transcriptionProvider}
-                  transcriptionModel={state.transcriptionModel}
-                  summarizationProvider={state.summarizationProvider}
-                  summarizationModel={state.summarizationModel}
-                  onLanguageChange={(language) => update({ language })}
-                  onTranscriptionChange={(transcriptionProvider, transcriptionModel) => update({ transcriptionProvider, transcriptionModel })}
-                  onSummarizationChange={(summarizationProvider, summarizationModel) => update({ summarizationProvider, summarizationModel })}
                   onStartRecording={() => setScreen('recording')}
                   onViewMeeting={handleViewMeeting}
                   onOpenSettings={() => update({ screen: 'settings', activeNav: 'settings' })}

@@ -1,71 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { MicButton } from '../components/MicButton';
 
-const LANGUAGES = [
-  { code: 'auto', label: 'Auto' },
-  { code: 'en', label: 'EN' },
-  { code: 'bg', label: 'BG' },
-];
-
-interface ProviderInfo { id: string; name: string; }
-
 interface Props {
-  language: string;
-  transcriptionProvider: string;
-  transcriptionModel: string;
-  summarizationProvider: string;
-  summarizationModel: string;
-  onLanguageChange: (lang: string) => void;
-  onTranscriptionChange: (provider: string, model: string) => void;
-  onSummarizationChange: (provider: string, model: string) => void;
   onStartRecording: () => void;
   onViewMeeting: (id: string) => void;
   onOpenSettings: () => void;
 }
 
-export function Idle(props: Props) {
-  const {
-    language, transcriptionProvider, transcriptionModel,
-    summarizationProvider, summarizationModel,
-    onLanguageChange, onTranscriptionChange, onSummarizationChange,
-    onStartRecording, onViewMeeting, onOpenSettings,
-  } = props;
-
+export function Idle({ onStartRecording, onViewMeeting, onOpenSettings }: Props) {
   const [meetings, setMeetings] = useState<any[]>([]);
   const [search, setSearch] = useState('');
-  const [tProviders, setTProviders] = useState<ProviderInfo[]>([]);
-  const [sProviders, setSProviders] = useState<ProviderInfo[]>([]);
-  const [tModels, setTModels] = useState<string[]>([]);
-  const [sModels, setSModels] = useState<string[]>([]);
-
-  // Load providers on mount
-  useEffect(() => {
-    window.api.listProviders().then((p: any) => {
-      setTProviders(p.transcription || []);
-      setSProviders(p.summarization || []);
-    }).catch(() => {});
-  }, []);
-
-  // Load models when provider changes
-  useEffect(() => {
-    window.api.listProviderModels('transcription', transcriptionProvider)
-      .then((models: string[]) => {
-        setTModels(models);
-        if (models.length > 0 && !models.includes(transcriptionModel)) {
-          onTranscriptionChange(transcriptionProvider, models[0]);
-        }
-      }).catch(() => setTModels([]));
-  }, [transcriptionProvider]);
-
-  useEffect(() => {
-    window.api.listProviderModels('summarization', summarizationProvider)
-      .then((models: string[]) => {
-        setSModels(models);
-        if (models.length > 0 && (!summarizationModel || !models.includes(summarizationModel))) {
-          onSummarizationChange(summarizationProvider, models[0]);
-        }
-      }).catch(() => setSModels([]));
-  }, [summarizationProvider]);
 
   // Load meetings
   useEffect(() => {
@@ -100,55 +44,6 @@ export function Idle(props: Props) {
         </button>
       </div>
 
-      {/* Controls */}
-      <div style={styles.controls}>
-        {/* Language */}
-        <ControlRow label="Language">
-          <PillGroup items={LANGUAGES.map((l) => ({ id: l.code, label: l.label }))}
-            value={language} onChange={onLanguageChange} />
-        </ControlRow>
-
-        {/* Transcription */}
-        <ControlRow label="Transcription">
-          <div style={styles.providerRow}>
-            <PillGroup
-              items={tProviders.map((p) => ({ id: p.id, label: p.name.replace(' (Local)', '').replace(' Whisper', '') }))}
-              value={transcriptionProvider}
-              onChange={(id) => {
-                const firstModel = tModels[0] || '';
-                onTranscriptionChange(id, firstModel);
-              }}
-            />
-            {tModels.length > 0 && (
-              <select value={transcriptionModel} style={styles.select}
-                onChange={(e) => onTranscriptionChange(transcriptionProvider, e.target.value)}>
-                {tModels.map((m) => <option key={m} value={m}>{m}</option>)}
-              </select>
-            )}
-          </div>
-        </ControlRow>
-
-        {/* Summarization */}
-        <ControlRow label="Summarization">
-          <div style={styles.providerRow}>
-            <PillGroup
-              items={sProviders.map((p) => ({ id: p.id, label: p.name.replace(' (Local)', '') }))}
-              value={summarizationProvider}
-              onChange={(id) => {
-                onSummarizationChange(id, '');
-                // Models will reload via useEffect
-              }}
-            />
-            {sModels.length > 0 && (
-              <select value={summarizationModel || sModels[0] || ''} style={styles.select}
-                onChange={(e) => onSummarizationChange(summarizationProvider, e.target.value)}>
-                {sModels.map((m) => <option key={m} value={m}>{m}</option>)}
-              </select>
-            )}
-          </div>
-        </ControlRow>
-      </div>
-
       {/* Mic button */}
       <div style={styles.hero}>
         <MicButton state="idle" onClick={onStartRecording} />
@@ -180,38 +75,6 @@ export function Idle(props: Props) {
   );
 }
 
-// ── Sub-components ──
-
-function ControlRow({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div style={styles.controlRow}>
-      <span style={styles.controlLabel}>{label}</span>
-      {children}
-    </div>
-  );
-}
-
-function PillGroup({ items, value, onChange }: {
-  items: { id: string; label: string }[];
-  value: string;
-  onChange: (id: string) => void;
-}) {
-  return (
-    <div style={styles.pillGroup}>
-      {items.map((item, i) => (
-        <button key={item.id} onClick={() => onChange(item.id)}
-          style={{
-            ...styles.pill,
-            ...(value === item.id ? styles.pillActive : {}),
-            ...(i === items.length - 1 ? { borderRight: 'none' } : {}),
-          }}>
-          {item.label}
-        </button>
-      ))}
-    </div>
-  );
-}
-
 function formatDuration(seconds: number): string {
   const m = Math.floor(seconds / 60);
   if (m < 60) return `${m} min`;
@@ -231,34 +94,6 @@ const styles: Record<string, React.CSSProperties> = {
   searchInput: {
     flex: 1, border: 'none', outline: 'none', background: 'transparent',
     fontSize: 13, fontFamily: 'var(--font)', color: 'var(--text-primary)',
-  },
-  controls: {
-    display: 'flex', flexDirection: 'column', gap: 10,
-    padding: '16px', background: 'var(--bg-card)', borderRadius: 'var(--radius-md)',
-    border: '1px solid var(--border-light)', marginBottom: 16,
-  },
-  controlRow: { display: 'flex', alignItems: 'center', gap: 12 },
-  controlLabel: {
-    fontSize: 11, fontWeight: 600, color: 'var(--text-tertiary)',
-    textTransform: 'uppercase' as const, letterSpacing: '0.05em', minWidth: 90,
-  },
-  providerRow: { display: 'flex', alignItems: 'center', gap: 8, flex: 1, flexWrap: 'wrap' as const },
-  pillGroup: {
-    display: 'flex', borderRadius: 'var(--radius-sm)',
-    border: '1px solid var(--border)', overflow: 'hidden',
-  },
-  pill: {
-    padding: '5px 10px', fontSize: 11, fontWeight: 500,
-    background: 'var(--bg)', color: 'var(--text-secondary)',
-    border: 'none', borderRight: '1px solid var(--border)',
-    cursor: 'pointer', transition: 'all 150ms', whiteSpace: 'nowrap' as const,
-  },
-  pillActive: { background: 'var(--accent)', color: 'white' },
-  select: {
-    padding: '5px 8px', fontSize: 11, fontWeight: 500, fontFamily: 'var(--font-mono)',
-    background: 'var(--bg)', color: 'var(--text-primary)',
-    border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)',
-    cursor: 'pointer', outline: 'none', maxWidth: 180,
   },
   hero: {
     display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: '20px 0',

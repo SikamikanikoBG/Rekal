@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { tokens } from '../styles/tokens';
 import { ChatMessage } from '../../shared/types';
+import { Markdown } from '../components/Markdown';
 
 const SUGGESTED_QUESTIONS = [
   'What were my most discussed topics this month?',
@@ -169,7 +170,11 @@ export function GlobalChat() {
                     ...(msg.role === 'user' ? styles.userBubble : styles.assistantBubble),
                   }}
                 >
-                  <p style={styles.messageText}>{msg.content}</p>
+                  {msg.role === 'assistant' ? (
+                    <Markdown content={msg.content} />
+                  ) : (
+                    <p style={styles.messageText}>{msg.content}</p>
+                  )}
                 </div>
               </div>
             ))}
@@ -179,7 +184,7 @@ export function GlobalChat() {
               <div style={{ ...styles.messageRow, justifyContent: 'flex-start' }}>
                 <div style={{ ...styles.messageBubble, ...styles.assistantBubble }}>
                   {streamingText ? (
-                    <p style={styles.messageText}>{streamingText}</p>
+                    <Markdown content={streamingText} />
                   ) : (
                     <div style={styles.typingIndicator}>
                       <span style={{ ...styles.typingDot, animationDelay: '0ms' }} />

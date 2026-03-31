@@ -29,6 +29,18 @@ export function Settings({ onSave, onBack }: Props) {
   const [modelSaved, setModelSaved] = useState(false);
   const [ethicalNotifications, setEthicalNotifications] = useState(true);
   const [notificationInterval, setNotificationInterval] = useState(10);
+  // Default providers
+  const [tProviders, setTProviders] = useState<{id:string;name:string}[]>([]);
+  const [sProviders, setSProviders] = useState<{id:string;name:string}[]>([]);
+  const [tProvider, setTProvider] = useState('whisper-local');
+  const [tModel, setTModel] = useState('small');
+  const [sProvider, setSProvider] = useState('ollama');
+  const [tModels, setTModels] = useState<string[]>([]);
+  const [sModels, setSModels] = useState<string[]>([]);
+  const [tTestResult, setTTestResult] = useState<{valid:boolean;error?:string}|null>(null);
+  const [sTestResult, setSTestResult] = useState<{valid:boolean;error?:string}|null>(null);
+  const [tTesting, setTTesting] = useState(false);
+  const [sTesting, setSTesting] = useState(false);
 
   useEffect(() => {
     window.api.getConfig().then((cfg: any) => {
@@ -36,10 +48,27 @@ export function Settings({ onSave, onBack }: Props) {
       setSelectedModel(cfg.summarizationModel || '');
       setEthicalNotifications(cfg.ethicalNotifications !== false);
       setNotificationInterval(cfg.notificationIntervalMin || 10);
+      setTProvider(cfg.transcriptionProvider || 'whisper-local');
+      setTModel(cfg.transcriptionModel || 'small');
+      setSProvider(cfg.summarizationProvider || 'ollama');
     });
     window.api.getOllamaUrl().then((url: string) => setOllamaUrl(url));
     loadOllamaModels();
+    window.api.listProviders().then((p: any) => {
+      setTProviders(p.transcription || []);
+      setSProviders(p.summarization || []);
+    }).catch(() => {});
   }, []);
+
+  // Load models when provider changes
+  useEffect(() => {
+    window.api.listProviderModels('transcription', tProvider)
+      .then((m: string[]) => setTModels(m)).catch(() => setTModels([]));
+  }, [tProvider]);
+  useEffect(() => {
+    window.api.listProviderModels('summarization', sProvider)
+      .then((m: string[]) => setSModels(m)).catch(() => setSModels([]));
+  }, [sProvider]);
 
   async function loadOllamaModels() {
     try {
@@ -83,6 +112,81 @@ export function Settings({ onSave, onBack }: Props) {
         <div style={{ width: 60 }} />
       </div>
 
+      {/* Default Providers */}
+      <Section title="Default Providers" hint="Choose which services to use for transcription and summarization. These apply to all recordings and chat.">
+        <div style={styles.keyRow}>
+          <label style={styles.keyLabel}>Transcription Provider</label>
+          <div style={styles.keyInputWrap}>
+            <select value={tProvider} style={{ ...styles.keyInput, cursor: 'pointer' }}
+              onChange={async (e) => {
+                setTProvider(e.target.value);
+                setTTestResult(null);
+                await window.api.setConfig({ transcriptionProvider: e.target.value });
+              }}>
+              {tProviders.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
+            {tModels.length > 0 && (
+              <select value={tModel} style={{ ...styles.keyInput, cursor: 'pointer', maxWidth: 120 }}
+                onChange={async (e) => {
+                  setTModel(e.target.value);
+                  await window.api.setConfig({ transcriptionModel: e.target.value });
+                }}>
+                {tModels.map((m) => <option key={m} value={m}>{m}</option>)}
+              </select>
+            )}
+          </div>
+          <div style={styles.testRow}>
+            <button className="btn btn-ghost" disabled={tTesting} style={{ fontSize: 12, padding: '4px 12px' }}
+              onClick={async () => {
+                setTTesting(true); setTTestResult(null);
+                const result = await window.api.validateProvider('transcription', tProvider);
+                setTTestResult(result); setTTesting(false);
+              }}>
+              {tTesting ? 'Testing...' : 'Test'}
+            </button>
+            {tTestResult && (
+              <span style={{ fontSize: 12, color: tTestResult.valid ? 'var(--green)' : 'var(--red)', fontWeight: 500 }}>
+                {tTestResult.valid ? '✓ Ready' : `✗ ${tTestResult.error}`}
+              </span>
+            )}
+          </div>
+        </div>
+        <div style={styles.keyRow}>
+          <label style={styles.keyLabel}>Summarization Provider</label>
+          <div style={styles.keyInputWrap}>
+            <select value={sProvider} style={{ ...styles.keyInput, cursor: 'pointer' }}
+              onChange={async (e) => {
+                setSProvider(e.target.value);
+                setSTestResult(null);
+                await window.api.setConfig({ summarizationProvider: e.target.value });
+              }}>
+              {sProviders.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
+            {sModels.length > 0 && (
+              <select value={selectedModel || sModels[0] || ''} style={{ ...styles.keyInput, cursor: 'pointer', maxWidth: 140 }}
+                onChange={(e) => saveModel(e.target.value)}>
+                {sModels.map((m) => <option key={m} value={m}>{m}</option>)}
+              </select>
+            )}
+          </div>
+          <div style={styles.testRow}>
+            <button className="btn btn-ghost" disabled={sTesting} style={{ fontSize: 12, padding: '4px 12px' }}
+              onClick={async () => {
+                setSTesting(true); setSTestResult(null);
+                const result = await window.api.validateProvider('summarization', sProvider);
+                setSTestResult(result); setSTesting(false);
+              }}>
+              {sTesting ? 'Testing...' : 'Test'}
+            </button>
+            {sTesting === false && sTestResult && (
+              <span style={{ fontSize: 12, color: sTestResult.valid ? 'var(--green)' : 'var(--red)', fontWeight: 500 }}>
+                {sTestResult.valid ? '✓ Ready' : `✗ ${sTestResult.error}`}
+              </span>
+            )}
+          </div>
+        </div>
+      </Section>
+
       {/* Ollama */}
       <Section title="Ollama" hint="Local LLM server for summarization. Change the URL if Ollama runs on another machine.">
         <div style={styles.keyRow}>
@@ -120,25 +224,6 @@ export function Settings({ onSave, onBack }: Props) {
               {ollamaTestResult.success ? `\u2713 ${ollamaTestResult.message}` : `\u2717 ${ollamaTestResult.message}`}
             </span>
           )}
-        </div>
-        <div style={styles.keyRow}>
-          <label style={styles.keyLabel}>Summarization Model</label>
-          <div style={styles.keyInputWrap}>
-            <select
-              value={selectedModel}
-              onChange={(e) => saveModel(e.target.value)}
-              style={{ ...styles.keyInput, cursor: 'pointer' }}
-            >
-              <option value="">Select a model...</option>
-              {ollamaModels.map((m) => (
-                <option key={m} value={m}>{m}</option>
-              ))}
-            </select>
-            <button className="btn btn-ghost" style={{ fontSize: 11, padding: '4px 8px' }} onClick={loadOllamaModels}>
-              ↻
-            </button>
-            {modelSaved && <span style={styles.savedBadge}>Saved</span>}
-          </div>
         </div>
       </Section>
 

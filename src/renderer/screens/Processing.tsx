@@ -2,21 +2,13 @@ import React, { useState, useEffect } from 'react';
 
 interface Props {
   audioPath: string;
-  transcriptionProvider: string;
-  transcriptionModel: string;
-  summarizationProvider: string;
-  summarizationModel: string;
-  language: string;
   onComplete: (transcript: any, notes: any) => void;
   onError: () => void;
 }
 
 type Step = 'transcribing' | 'summarizing' | 'done';
 
-export function Processing({
-  audioPath, transcriptionProvider, transcriptionModel,
-  summarizationProvider, summarizationModel, language, onComplete, onError,
-}: Props) {
+export function Processing({ audioPath, onComplete, onError }: Props) {
   const [step, setStep] = useState<Step>('transcribing');
   const [progress, setProgress] = useState(0);
   const [statusText, setStatusText] = useState('Starting transcription...');
@@ -27,6 +19,13 @@ export function Processing({
   }, []);
 
   async function run() {
+    // Read providers from config
+    const cfg = await window.api.getConfig();
+    const transcriptionProvider = cfg.transcriptionProvider || 'whisper-local';
+    const transcriptionModel = cfg.transcriptionModel || 'small';
+    const summarizationProvider = cfg.summarizationProvider || 'ollama';
+    const summarizationModel = cfg.summarizationModel || '';
+    const language = cfg.language || 'auto';
     // Step 1: Transcribe
     const cleanupTranscript = window.api.onTranscriptionProgress(
       (data: { percent: number; text: string }) => {
