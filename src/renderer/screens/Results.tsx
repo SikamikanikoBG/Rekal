@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MeetingChat } from '../components/MeetingChat';
+import { Markdown } from '../components/Markdown';
 
 interface Props {
   transcript: any;
@@ -167,7 +168,9 @@ function SummaryTab({ notes }: { notes: any }) {
     <div style={styles.tabContent}>
       <section>
         <h3 style={styles.sectionTitle}>Summary</h3>
-        <p style={styles.summaryText}>{notes?.summary || 'No summary generated.'}</p>
+        {notes?.summary
+          ? <Markdown content={notes.summary} />
+          : <p style={styles.summaryText}>No summary generated.</p>}
       </section>
       {notes?.keyDecisions?.length > 0 && (
         <section style={{ marginTop: 24 }}>
