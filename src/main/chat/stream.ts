@@ -255,30 +255,14 @@ async function streamHaiperProxy(
     throw new Error(`hAIper chat error (${res.status}): ${error}`);
   }
 
-  let fullResponse = '';
-  const reader = res.body!.getReader();
-  const decoder = new TextDecoder();
+  const data = await res.json() as { content?: string; error?: string };
 
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    const chunk = decoder.decode(value, { stream: true });
-    for (const line of chunk.split('\n')) {
-      if (line.startsWith('data: ') && line !== 'data: [DONE]') {
-        try {
-          const parsed = JSON.parse(line.slice(6));
-          const token = parsed.choices?.[0]?.delta?.content || '';
-          if (token) {
-            fullResponse += token;
-            onToken(token, false);
-          }
-        } catch {}
-      }
-    }
-  }
+  if (data.error) throw new Error(data.error);
 
+  const content = data.content || '';
+  if (content) onToken(content, false);
   onToken('', true);
-  return fullResponse;
+  return content;
 }
 
 async function streamAzureOpenAI(
