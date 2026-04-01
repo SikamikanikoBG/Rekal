@@ -61,6 +61,8 @@ export async function streamChat(opts: ChatStreamOptions): Promise<string> {
       return streamClaude(model, systemPrompt, messages, onToken);
     case 'azure-openai':
       return streamAzureOpenAI(model, systemPrompt, messages, onToken);
+    case 'haiper-proxy':
+      return streamHaiperProxy(model, systemPrompt, messages, onToken);
     default:
       throw new Error(`Unsupported chat provider: ${provider}`);
   }
@@ -224,6 +226,51 @@ async function streamClaude(
           if (parsed.type === 'content_block_delta' && parsed.delta?.text) {
             fullResponse += parsed.delta.text;
             onToken(parsed.delta.text, false);
+          }
+        } catch {}
+      }
+    }
+  }
+
+  onToken('', true);
+  return fullResponse;
+}
+
+async function streamHaiperProxy(
+  _model: string,
+  systemPrompt: string,
+  messages: Array<{ role: string; content: string }>,
+  onToken: (token: string, done: boolean) => void
+): Promise<string> {
+  const { net } = await import('electron');
+
+  const res = await net.fetch('https://haiper.test.postbank.bg/api/meeting-ai/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ system_prompt: systemPrompt, messages }),
+  });
+
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(`hAIper chat error (${res.status}): ${error}`);
+  }
+
+  let fullResponse = '';
+  const reader = res.body!.getReader();
+  const decoder = new TextDecoder();
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    const chunk = decoder.decode(value, { stream: true });
+    for (const line of chunk.split('\n')) {
+      if (line.startsWith('data: ') && line !== 'data: [DONE]') {
+        try {
+          const parsed = JSON.parse(line.slice(6));
+          const token = parsed.choices?.[0]?.delta?.content || '';
+          if (token) {
+            fullResponse += token;
+            onToken(token, false);
           }
         } catch {}
       }
