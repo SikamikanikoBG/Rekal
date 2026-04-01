@@ -41,6 +41,7 @@ export function Settings({ onSave, onBack }: Props) {
   const [sTestResult, setSTestResult] = useState<{valid:boolean;error?:string}|null>(null);
   const [tTesting, setTTesting] = useState(false);
   const [sTesting, setSTesting] = useState(false);
+  const [language, setLanguage] = useState('auto');
 
   useEffect(() => {
     window.api.getConfig().then((cfg: any) => {
@@ -51,6 +52,7 @@ export function Settings({ onSave, onBack }: Props) {
       setTProvider(cfg.transcriptionProvider || 'whisper-local');
       setTModel(cfg.transcriptionModel || 'small');
       setSProvider(cfg.summarizationProvider || 'ollama');
+      setLanguage(cfg.language || 'auto');
     });
     window.api.getOllamaUrl().then((url: string) => setOllamaUrl(url));
     loadOllamaModels();
@@ -183,6 +185,20 @@ export function Settings({ onSave, onBack }: Props) {
                 {sTestResult.valid ? '✓ Ready' : `✗ ${sTestResult.error}`}
               </span>
             )}
+          </div>
+        </div>
+        <div style={styles.keyRow}>
+          <label style={styles.keyLabel}>Transcription Language</label>
+          <div style={styles.keyInputWrap}>
+            <select value={language} style={{ ...styles.keyInput, cursor: 'pointer' }}
+              onChange={async (e) => {
+                setLanguage(e.target.value);
+                await window.api.setConfig({ language: e.target.value });
+              }}>
+              <option value="auto">Auto-detect</option>
+              <option value="en-US">English</option>
+              <option value="bg-BG">Bulgarian</option>
+            </select>
           </div>
         </div>
       </Section>
