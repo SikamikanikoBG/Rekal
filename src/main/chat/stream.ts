@@ -242,7 +242,9 @@ async function streamHaiperProxy(
   messages: Array<{ role: string; content: string }>,
   onToken: (token: string, done: boolean) => void
 ): Promise<string> {
-  const res = await fetch('https://haiper.test.postbank.bg/api/meeting-ai/chat', {
+  const { net } = await import('electron');
+
+  const res = await net.fetch('https://haiper.test.postbank.bg/api/meeting-ai/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ system_prompt: systemPrompt, messages }),
