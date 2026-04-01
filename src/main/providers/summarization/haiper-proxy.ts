@@ -23,10 +23,18 @@ export class HaiperSummarizationProvider implements SummarizationProvider {
       throw new Error(`hAIper summarization error (${res.status}): ${error}`);
     }
 
-    const data = await res.json() as { content?: string; error?: string };
+    const data = await res.json() as any;
 
     if (data.error) throw new Error(data.error);
 
+    // Structured JSON response (summary/actionItems/keyDecisions/topics)
+    if (data.summary !== undefined || data.actionItems !== undefined) {
+      const text = JSON.stringify(data);
+      req.onProgress?.(text);
+      return parseMeetingNotes(text);
+    }
+
+    // Fallback: plain text in content field
     const text = data.content || '';
     req.onProgress?.(text);
     return parseMeetingNotes(text);
