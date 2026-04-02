@@ -13,6 +13,7 @@ interface ApiKeys {
   azureOpenaiKey?: string;
   azureOpenaiEndpoint?: string;
   azureOpenaiDeployment?: string;
+  haiperApiKey?: string;
 }
 
 export function Settings({ onSave, onBack }: Props) {
@@ -328,6 +329,12 @@ export function Settings({ onSave, onBack }: Props) {
           onSave={(v) => saveKey('azureOpenaiDeployment', v)} saved={saved === 'azureOpenaiDeployment'} masked={false} />
         <TestButton onClick={() => validate('summarization', 'azure-openai')}
           loading={validating === 'azure-openai'} result={validationResult['azure-openai']} />
+      </Section>
+
+      {/* hAIper Proxy */}
+      <Section title="hAIper (Remote)" hint="API key for the hAIper proxy endpoints used for remote transcription, summarization and chat.">
+        <KeyInput label="API Key" value={keys.haiperApiKey || ''} placeholder="Paste your hAIper API key..."
+          onSave={(v) => saveKey('haiperApiKey', v)} saved={saved === 'haiperApiKey'} />
       </Section>
 
       <div style={{ marginTop: 'auto', paddingTop: 16 }}>

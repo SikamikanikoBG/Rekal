@@ -2,6 +2,7 @@ import { net } from 'electron';
 import { SummarizationProvider, SummarizeRequest } from './types';
 import { MeetingNotes } from '../../../shared/types';
 import { parseMeetingNotes } from './parse-notes';
+import { getConfig } from '../../config/store';
 
 const HAIPER_BASE_URL = 'https://haiper.test.postbank.bg';
 
@@ -12,9 +13,13 @@ export class HaiperSummarizationProvider implements SummarizationProvider {
   async summarize(req: SummarizeRequest): Promise<MeetingNotes> {
     const transcriptText = req.transcript.segments.map((s) => s.text).join('\n');
 
+    const apiKey = getConfig().apiKeys.haiperApiKey || '';
     const res = await net.fetch(`${HAIPER_BASE_URL}/api/meeting-ai/summarize`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': apiKey,
+      },
       body: JSON.stringify({ transcript: transcriptText }),
     });
 

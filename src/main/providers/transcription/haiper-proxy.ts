@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import { net } from 'electron';
 import { TranscriptionProvider, TranscribeRequest } from './types';
 import { Transcript } from '../../../shared/types';
+import { getConfig } from '../../config/store';
 
 const HAIPER_BASE_URL = 'https://haiper.test.postbank.bg';
 
@@ -26,11 +27,15 @@ export class HaiperTranscriptionProvider implements TranscriptionProvider {
       Buffer.from(`\r\n--${boundary}--\r\n`),
     ]);
 
+    const apiKey = getConfig().apiKeys.haiperApiKey || '';
     const res = await net.fetch(
       `${HAIPER_BASE_URL}/api/meeting-ai/transcribe?language=${lang}`,
       {
         method: 'POST',
-        headers: { 'Content-Type': `multipart/form-data; boundary=${boundary}` },
+        headers: {
+          'Content-Type': `multipart/form-data; boundary=${boundary}`,
+          'X-API-Key': apiKey,
+        },
         body,
       }
     );

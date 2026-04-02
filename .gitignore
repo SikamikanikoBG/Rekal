@@ -28,3 +28,4 @@ release/
 # Cache
 .cache/
 release/
+resources/private.pem

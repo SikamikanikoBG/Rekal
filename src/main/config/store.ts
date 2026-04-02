@@ -17,6 +17,7 @@ export interface ConfigSchema {
     azureOpenaiKey?: string;
     azureOpenaiEndpoint?: string;
     azureOpenaiDeployment?: string;
+    haiperApiKey?: string;
   };
 }
 
