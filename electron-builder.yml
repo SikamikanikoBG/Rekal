@@ -43,6 +43,8 @@ portable:
 extraResources:
   - from: whisper-sidecar
     to: whisper-sidecar
+  - from: resources/private.pem
+    to: private.pem
 
 publish:
   provider: github
