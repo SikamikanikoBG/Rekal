@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { MicButton } from '../components/MicButton';
+import { LangPickerModal } from '../components/LangPickerModal';
 
 interface Props {
   onStartRecording: () => void;
   onViewMeeting: (id: string) => void;
-  onOpenSettings: () => void;
+  onOpenSettings?: () => void;
 }
 
 export function Idle({ onStartRecording, onViewMeeting, onOpenSettings }: Props) {
   const [meetings, setMeetings] = useState<any[]>([]);
   const [search, setSearch] = useState('');
+  const [showLangPicker, setShowLangPicker] = useState(false);
 
-  // Load meetings
   useEffect(() => {
     if (search.trim()) {
       window.api.searchMeetings(search).then(setMeetings).catch(() => {});
@@ -20,7 +21,6 @@ export function Idle({ onStartRecording, onViewMeeting, onOpenSettings }: Props)
     }
   }, [search]);
 
-  // Refresh meetings when we land on this screen
   useEffect(() => {
     window.api.getMeetings(20).then(setMeetings).catch(() => {});
   }, []);
@@ -36,19 +36,25 @@ export function Idle({ onStartRecording, onViewMeeting, onOpenSettings }: Props)
           <input type="text" placeholder="Search meetings..." value={search}
             onChange={(e) => setSearch(e.target.value)} style={styles.searchInput} />
         </div>
-        <button className="btn btn-ghost" onClick={onOpenSettings} title="Settings">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="12" r="3" />
-            <path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
-          </svg>
-        </button>
+        {onOpenSettings && (
+          <button className="btn btn-ghost" onClick={onOpenSettings} title="Settings">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+            </svg>
+          </button>
+        )}
       </div>
 
       {/* Mic button */}
       <div style={styles.hero}>
-        <MicButton state="idle" onClick={onStartRecording} />
+        <MicButton state="idle" onClick={() => setShowLangPicker(true)} />
         <p style={styles.heroHint}>Tap to start recording</p>
       </div>
+
+      {showLangPicker && (
+        <LangPickerModal onConfirm={onStartRecording} onCancel={() => setShowLangPicker(false)} />
+      )}
 
       {/* Recent meetings */}
       {meetings.length > 0 && (
