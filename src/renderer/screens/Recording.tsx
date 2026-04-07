@@ -14,9 +14,10 @@ export function Recording({ onStop, onCancel }: Props) {
   const [stopping, setStopping] = useState(false);
 
   useEffect(() => {
-    startRecording();
-    // Ethical notification: announce recording started
-    window.api.tts.recordingStarted();
+    // Announce first, then start recording so the TTS doesn't get captured
+    window.api.tts.recordingStarted().finally(() => {
+      startRecording();
+    });
   }, []);
 
   // Periodic "recording in progress" reminder
