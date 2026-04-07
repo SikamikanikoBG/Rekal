@@ -15,6 +15,7 @@ import { streamChat, buildChatSystemPrompt } from './chat/stream';
 import { awardXP, getStats, getAchievements, getActiveChallenge, startWeeklyChallenge, updateStreak, getLevelInfo, getXPHistory, checkSpecialAchievement } from './gamification/engine';
 import { logger } from './logging/logger';
 import { announceRecordingStarted, announceRecordingStopped, announceRecordingInProgress } from './audio/tts-notify';
+import { loadManagedConfig, ConfigSource } from './config/managed-config';
 
 // ── Input Validation Helpers ──
 
@@ -50,6 +51,7 @@ function validatePath(value: unknown, name: string): string {
 }
 
 let mainWindow: BrowserWindow | null = null;
+let configSource: ConfigSource = 'none';
 let tray: Tray | null = null;
 let mcpProcess: ChildProcess | null = null;
 
@@ -179,6 +181,12 @@ function registerIpcHandlers(): void {
   });
 
   // ── Audio ──
+
+  ipcMain.handle('get-desktop-sources', async () => {
+    const { desktopCapturer } = await import('electron');
+    const sources = await desktopCapturer.getSources({ types: ['screen'] });
+    return sources.map((s) => ({ id: s.id, name: s.name }));
+  });
 
   ipcMain.handle('save-audio-blob', async (_event, data: number[], _mimeType: string) => {
     const filePath = getNewRecordingPath();
@@ -590,6 +598,8 @@ ${meetingContext || '(No meetings recorded yet)'}`;
 
   // ── Usage Costs ──
 
+  ipcMain.handle('get-managed-mode', () => configSource);
+
   ipcMain.handle('costs:save', async (_event, record: { meetingId?: string; serviceType: 'stt' | 'llm'; provider: string; model: string; inputTokens?: number; outputTokens?: number; audioSeconds?: number; costUsd: number }) => {
     saveUsageCost(record);
     return { success: true };
@@ -661,6 +671,16 @@ app.whenReady().then(async () => {
   setupCSP();
   initDatabase();
   logger.info('Database initialized');
+
+  const isAdminMode = process.argv.includes('--admin');
+  if (isAdminMode) {
+    logger.info('Admin mode flag detected — skipping managed config');
+    configSource = 'none';
+  } else {
+    configSource = await loadManagedConfig();
+    logger.info('Managed config loaded', { source: configSource });
+  }
+
   createWindow();
   createTray();
   registerIpcHandlers();
