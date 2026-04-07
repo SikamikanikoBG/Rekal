@@ -4,7 +4,7 @@ import { Tabs } from '../components/ui';
 import { Achievement } from '../../shared/types';
 
 const RARITY_COLORS: Record<string, string> = {
-  common: tokens.colors.textTertiary,
+  common: 'var(--text-tertiary)',
   rare: '#3498DB',
   epic: '#9B59B6',
   legendary: '#F1C40F',
@@ -110,7 +110,7 @@ function AchievementCard({ achievement }: { achievement: Achievement }) {
       style={{
         ...styles.card,
         opacity: unlocked ? 1 : 0.5,
-        borderColor: unlocked && hovered ? rarityColor : tokens.colors.borderSubtle,
+        borderColor: unlocked && hovered ? rarityColor : 'var(--border-light)',
         boxShadow: unlocked ? `0 0 12px ${rarityBg}` : 'none',
       }}
       onMouseEnter={() => setHovered(true)}
@@ -196,16 +196,16 @@ const styles: Record<string, React.CSSProperties> = {
   title: {
     fontSize: tokens.fontSize.xxxl,
     fontWeight: tokens.fontWeight.bold,
-    color: tokens.colors.text,
+    color: 'var(--text-primary)',
     margin: 0,
   },
   count: {
     fontSize: tokens.fontSize.md,
-    color: tokens.colors.textSecondary,
+    color: 'var(--text-secondary)',
     fontWeight: tokens.fontWeight.medium,
   },
   loadingText: {
-    color: tokens.colors.textTertiary,
+    color: 'var(--text-tertiary)',
     fontSize: tokens.fontSize.md,
     textAlign: 'center' as const,
     marginTop: tokens.spacing.xxxl,
@@ -213,7 +213,7 @@ const styles: Record<string, React.CSSProperties> = {
   sectionHeader: {
     fontSize: tokens.fontSize.sm,
     fontWeight: tokens.fontWeight.semibold,
-    color: tokens.colors.textTertiary,
+    color: 'var(--text-tertiary)',
     textTransform: 'uppercase' as const,
     letterSpacing: '0.05em',
     marginBottom: tokens.spacing.md,
@@ -229,8 +229,8 @@ const styles: Record<string, React.CSSProperties> = {
   },
   card: {
     position: 'relative' as const,
-    background: tokens.colors.bgSurface,
-    border: `1px solid ${tokens.colors.borderSubtle}`,
+    background: 'var(--bg-card)',
+    border: `1px solid ${'var(--border-light)'}`,
     borderRadius: tokens.radius.lg,
     padding: tokens.spacing.lg,
     display: 'flex',
@@ -254,7 +254,7 @@ const styles: Record<string, React.CSSProperties> = {
     width: 48,
     height: 48,
     borderRadius: tokens.radius.full,
-    background: tokens.colors.bgSurfaceHover,
+    background: 'var(--bg-hover)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -267,24 +267,24 @@ const styles: Record<string, React.CSSProperties> = {
   cardName: {
     fontSize: tokens.fontSize.md,
     fontWeight: tokens.fontWeight.bold,
-    color: tokens.colors.text,
+    color: 'var(--text-primary)',
     margin: 0,
     marginBottom: 4,
   },
   cardDesc: {
     fontSize: tokens.fontSize.sm,
-    color: tokens.colors.textSecondary,
+    color: 'var(--text-secondary)',
     margin: 0,
     lineHeight: 1.4,
   },
   unlockDate: {
     fontSize: tokens.fontSize.xs,
-    color: tokens.colors.textTertiary,
+    color: 'var(--text-tertiary)',
     margin: 0,
     marginTop: tokens.spacing.sm,
   },
   emptyText: {
-    color: tokens.colors.textTertiary,
+    color: 'var(--text-tertiary)',
     fontSize: tokens.fontSize.md,
     textAlign: 'center' as const,
     marginTop: tokens.spacing.xxxl,

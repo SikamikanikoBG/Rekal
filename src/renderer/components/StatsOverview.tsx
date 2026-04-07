@@ -48,13 +48,13 @@ export function StatsOverview() {
       icon: '\u2B50',
       value: `Lvl ${levelInfo.level}`,
       label: levelInfo.title,
-      color: tokens.colors.accent,
+      color: 'var(--accent)',
     },
     {
       icon: '\u2728',
       value: stats.xp.toLocaleString(),
       label: 'Total XP',
-      color: tokens.colors.accent,
+      color: 'var(--accent)',
     },
     {
       icon: '\uD83D\uDD25',
@@ -92,8 +92,8 @@ const styles: Record<string, React.CSSProperties> = {
     gap: tokens.spacing.md,
   },
   card: {
-    background: tokens.colors.bgSurface,
-    border: `1px solid ${tokens.colors.borderSubtle}`,
+    background: 'var(--bg-card)',
+    border: `1px solid ${'var(--border-light)'}`,
     borderRadius: tokens.radius.lg,
     padding: tokens.spacing.lg,
     display: 'flex',
@@ -108,12 +108,12 @@ const styles: Record<string, React.CSSProperties> = {
   cardValue: {
     fontSize: tokens.fontSize.xl,
     fontWeight: tokens.fontWeight.bold,
-    color: tokens.colors.text,
+    color: 'var(--text-primary)',
     lineHeight: 1,
   },
   cardLabel: {
     fontSize: tokens.fontSize.xs,
-    color: tokens.colors.textSecondary,
+    color: 'var(--text-secondary)',
     fontWeight: tokens.fontWeight.medium,
   },
 };

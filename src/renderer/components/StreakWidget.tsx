@@ -49,7 +49,7 @@ export function StreakWidget() {
         </span>
         <span style={{
           ...styles.streakCount,
-          color: streak > 0 ? fireColor : tokens.colors.textTertiary,
+          color: streak > 0 ? fireColor : 'var(--text-tertiary)',
         }}>
           {streak}
         </span>
@@ -72,8 +72,8 @@ export function StreakWidget() {
 
 const styles: Record<string, React.CSSProperties> = {
   container: {
-    background: tokens.colors.bgSurface,
-    border: `1px solid ${tokens.colors.borderSubtle}`,
+    background: 'var(--bg-card)',
+    border: `1px solid ${'var(--border-light)'}`,
     borderRadius: tokens.radius.lg,
     padding: tokens.spacing.lg,
     display: 'flex',
@@ -98,19 +98,19 @@ const styles: Record<string, React.CSSProperties> = {
   },
   label: {
     fontSize: tokens.fontSize.sm,
-    color: tokens.colors.textSecondary,
+    color: 'var(--text-secondary)',
     margin: 0,
     marginTop: 4,
     fontWeight: tokens.fontWeight.medium,
   },
   longestText: {
     fontSize: tokens.fontSize.xs,
-    color: tokens.colors.textTertiary,
+    color: 'var(--text-tertiary)',
     margin: 0,
     marginTop: tokens.spacing.xs,
   },
   loadingText: {
-    color: tokens.colors.textTertiary,
+    color: 'var(--text-tertiary)',
     fontSize: tokens.fontSize.sm,
   },
 };

@@ -21,8 +21,8 @@ export function Card({ children, header, padding = 'md', style, className }: Car
     <div
       className={className}
       style={{
-        background: tokens.colors.bgSurface,
-        border: `1px solid ${tokens.colors.borderSubtle}`,
+        background: 'var(--bg-card)',
+        border: `1px solid ${'var(--border-light)'}`,
         borderRadius: tokens.radius.lg,
         overflow: 'hidden',
         ...style,
@@ -32,10 +32,10 @@ export function Card({ children, header, padding = 'md', style, className }: Car
         <div
           style={{
             padding: `${tokens.spacing.md}px ${tokens.spacing.lg}px`,
-            borderBottom: `1px solid ${tokens.colors.borderSubtle}`,
+            borderBottom: `1px solid ${'var(--border-light)'}`,
             fontSize: tokens.fontSize.sm,
             fontWeight: tokens.fontWeight.semibold,
-            color: tokens.colors.textSecondary,
+            color: 'var(--text-secondary)',
             textTransform: 'uppercase',
             letterSpacing: '0.05em',
           }}

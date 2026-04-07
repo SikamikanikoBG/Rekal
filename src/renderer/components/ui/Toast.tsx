@@ -11,21 +11,21 @@ export interface ToastData {
 
 const typeStyles: Record<ToastType, { bg: string; border: string; color: string; icon: string }> = {
   success: {
-    bg: tokens.colors.successSubtle,
+    bg: 'var(--green-light)',
     border: 'rgba(46, 204, 113, 0.3)',
-    color: tokens.colors.success,
+    color: 'var(--green)',
     icon: '\u2713',
   },
   error: {
-    bg: tokens.colors.dangerSubtle,
+    bg: 'var(--red-light)',
     border: 'rgba(231, 76, 60, 0.3)',
-    color: tokens.colors.danger,
+    color: 'var(--red)',
     icon: '!',
   },
   info: {
-    bg: tokens.colors.accentSubtle,
+    bg: 'var(--accent-light)',
     border: 'rgba(108, 92, 231, 0.3)',
-    color: tokens.colors.accent,
+    color: 'var(--accent)',
     icon: 'i',
   },
 };
@@ -41,7 +41,7 @@ export function ToastItem({ toast, onDismiss }: { toast: ToastData; onDismiss: (
         alignItems: 'center',
         gap: 10,
         padding: '10px 14px',
-        background: tokens.colors.bgSurface,
+        background: 'var(--bg-card)',
         border: `1px solid ${s.border}`,
         borderRadius: tokens.radius.md,
         boxShadow: tokens.shadow.md,
@@ -68,7 +68,7 @@ export function ToastItem({ toast, onDismiss }: { toast: ToastData; onDismiss: (
       >
         {s.icon}
       </span>
-      <span style={{ fontSize: tokens.fontSize.md, color: tokens.colors.text, flex: 1 }}>
+      <span style={{ fontSize: tokens.fontSize.md, color: 'var(--text-primary)', flex: 1 }}>
         {toast.message}
       </span>
     </div>

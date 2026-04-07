@@ -139,7 +139,7 @@ export function SearchOverlay({ open, onClose, onViewMeeting }: Props) {
       <div style={styles.modal} className="fade-in">
         {/* Search input */}
         <div style={styles.inputWrap}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={tokens.colors.textTertiary} strokeWidth="2">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={'var(--text-tertiary)'} strokeWidth="2">
             <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
           </svg>
           <input
@@ -261,10 +261,10 @@ function ResultItem({ result, selected, onClick, icon }: {
       onClick={onClick}
       style={{
         ...styles.resultItem,
-        background: selected ? tokens.colors.accentSubtle : 'transparent',
+        background: selected ? 'var(--accent-light)' : 'transparent',
       }}
     >
-      <span style={{ ...styles.resultIcon, color: selected ? tokens.colors.accent : tokens.colors.textTertiary }}>
+      <span style={{ ...styles.resultIcon, color: selected ? 'var(--accent)' : 'var(--text-tertiary)' }}>
         {icon}
       </span>
       <div style={{ flex: 1, minWidth: 0 }}>
@@ -297,8 +297,8 @@ const styles: Record<string, React.CSSProperties> = {
     backdropFilter: 'blur(4px)',
   },
   modal: {
-    background: tokens.colors.bgSurface,
-    border: `1px solid ${tokens.colors.border}`,
+    background: 'var(--bg-card)',
+    border: `1px solid ${'var(--border)'}`,
     borderRadius: tokens.radius.xl,
     boxShadow: tokens.shadow.lg,
     width: 560,
@@ -313,7 +313,7 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     gap: 10,
     padding: `${tokens.spacing.lg}px ${tokens.spacing.xl}px`,
-    borderBottom: `1px solid ${tokens.colors.borderSubtle}`,
+    borderBottom: `1px solid ${'var(--border-light)'}`,
   },
   input: {
     flex: 1,
@@ -322,16 +322,16 @@ const styles: Record<string, React.CSSProperties> = {
     background: 'transparent',
     fontSize: tokens.fontSize.xl,
     fontFamily: 'var(--font)',
-    color: tokens.colors.text,
+    color: 'var(--text-primary)',
   },
   kbd: {
     padding: '2px 6px',
     fontSize: tokens.fontSize.xs,
     fontFamily: 'var(--font-mono)',
-    color: tokens.colors.textTertiary,
-    background: tokens.colors.bgSurfaceHover,
+    color: 'var(--text-tertiary)',
+    background: 'var(--bg-hover)',
     borderRadius: tokens.radius.sm,
-    border: `1px solid ${tokens.colors.border}`,
+    border: `1px solid ${'var(--border)'}`,
   },
   results: {
     overflowY: 'auto',
@@ -343,7 +343,7 @@ const styles: Record<string, React.CSSProperties> = {
   resultGroupLabel: {
     fontSize: tokens.fontSize.xs,
     fontWeight: tokens.fontWeight.semibold,
-    color: tokens.colors.textTertiary,
+    color: 'var(--text-tertiary)',
     textTransform: 'uppercase',
     letterSpacing: '0.05em',
     padding: `${tokens.spacing.xs}px ${tokens.spacing.xl}px`,
@@ -368,19 +368,19 @@ const styles: Record<string, React.CSSProperties> = {
   resultTitle: {
     fontSize: tokens.fontSize.md,
     fontWeight: tokens.fontWeight.medium,
-    color: tokens.colors.text,
+    color: 'var(--text-primary)',
     whiteSpace: 'nowrap',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
   },
   resultSubtitle: {
     fontSize: tokens.fontSize.xs,
-    color: tokens.colors.textTertiary,
+    color: 'var(--text-tertiary)',
     marginTop: 1,
   },
   resultSnippet: {
     fontSize: tokens.fontSize.xs,
-    color: tokens.colors.textTertiary,
+    color: 'var(--text-tertiary)',
     fontFamily: 'var(--font-mono)',
     flexShrink: 0,
   },
@@ -390,7 +390,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   noResultsText: {
     fontSize: tokens.fontSize.sm,
-    color: tokens.colors.textTertiary,
+    color: 'var(--text-tertiary)',
   },
   hint: {
     padding: `${tokens.spacing.xl}px`,
@@ -398,6 +398,6 @@ const styles: Record<string, React.CSSProperties> = {
   },
   hintText: {
     fontSize: tokens.fontSize.sm,
-    color: tokens.colors.textTertiary,
+    color: 'var(--text-tertiary)',
   },
 };

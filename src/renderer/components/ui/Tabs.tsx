@@ -20,7 +20,7 @@ export function Tabs({ tabs, active, onChange, style }: TabsProps) {
       style={{
         display: 'flex',
         gap: 0,
-        borderBottom: `1px solid ${tokens.colors.border}`,
+        borderBottom: `1px solid ${'var(--border)'}`,
         ...style,
       }}
     >
@@ -35,10 +35,10 @@ export function Tabs({ tabs, active, onChange, style }: TabsProps) {
               fontSize: tokens.fontSize.md,
               fontWeight: tokens.fontWeight.medium,
               fontFamily: 'var(--font)',
-              color: isActive ? tokens.colors.accent : tokens.colors.textSecondary,
+              color: isActive ? 'var(--accent)' : 'var(--text-secondary)',
               background: 'none',
               border: 'none',
-              borderBottom: `2px solid ${isActive ? tokens.colors.accent : 'transparent'}`,
+              borderBottom: `2px solid ${isActive ? 'var(--accent)' : 'transparent'}`,
               cursor: 'pointer',
               transition: `all ${tokens.transition.fast}`,
               marginBottom: -1,
@@ -52,8 +52,8 @@ export function Tabs({ tabs, active, onChange, style }: TabsProps) {
               <span
                 style={{
                   fontSize: tokens.fontSize.xs,
-                  background: isActive ? tokens.colors.accentSubtle : tokens.colors.bgSurfaceHover,
-                  color: isActive ? tokens.colors.accent : tokens.colors.textTertiary,
+                  background: isActive ? 'var(--accent-light)' : 'var(--bg-hover)',
+                  color: isActive ? 'var(--accent)' : 'var(--text-tertiary)',
                   padding: '1px 6px',
                   borderRadius: tokens.radius.full,
                   fontWeight: tokens.fontWeight.semibold,

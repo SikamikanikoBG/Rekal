@@ -78,7 +78,7 @@ export function ChallengeWidget() {
             style={{
               ...styles.progressFill,
               width: `${progressPct}%`,
-              background: isComplete ? tokens.colors.success : tokens.colors.accent,
+              background: isComplete ? 'var(--green)' : 'var(--accent)',
             }}
           />
         </div>
@@ -99,14 +99,14 @@ export function ChallengeWidget() {
 
 const styles: Record<string, React.CSSProperties> = {
   container: {
-    background: tokens.colors.bgSurface,
-    border: `1px solid ${tokens.colors.borderSubtle}`,
+    background: 'var(--bg-card)',
+    border: `1px solid ${'var(--border-light)'}`,
     borderRadius: tokens.radius.lg,
     padding: tokens.spacing.lg,
   },
   containerComplete: {
-    borderColor: tokens.colors.success,
-    boxShadow: `0 0 16px ${tokens.colors.successSubtle}`,
+    borderColor: 'var(--green)',
+    boxShadow: `0 0 16px ${'var(--green-light)'}`,
   },
   header: {
     display: 'flex',
@@ -121,19 +121,19 @@ const styles: Record<string, React.CSSProperties> = {
   headerTitle: {
     fontSize: tokens.fontSize.sm,
     fontWeight: tokens.fontWeight.semibold,
-    color: tokens.colors.textSecondary,
+    color: 'var(--text-secondary)',
     textTransform: 'uppercase' as const,
     letterSpacing: '0.05em',
     flex: 1,
   },
   daysLeft: {
     fontSize: tokens.fontSize.xs,
-    color: tokens.colors.textTertiary,
+    color: 'var(--text-tertiary)',
     fontWeight: tokens.fontWeight.medium,
   },
   description: {
     fontSize: tokens.fontSize.md,
-    color: tokens.colors.text,
+    color: 'var(--text-primary)',
     fontWeight: tokens.fontWeight.medium,
     margin: 0,
     marginBottom: tokens.spacing.md,
@@ -147,7 +147,7 @@ const styles: Record<string, React.CSSProperties> = {
   progressBar: {
     flex: 1,
     height: 6,
-    background: tokens.colors.border,
+    background: 'var(--border)',
     borderRadius: tokens.radius.full,
     overflow: 'hidden',
   },
@@ -158,7 +158,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   progressText: {
     fontSize: tokens.fontSize.xs,
-    color: tokens.colors.textSecondary,
+    color: 'var(--text-secondary)',
     fontWeight: tokens.fontWeight.semibold,
     minWidth: 36,
     textAlign: 'right' as const,
@@ -170,33 +170,33 @@ const styles: Record<string, React.CSSProperties> = {
   },
   rewardLabel: {
     fontSize: tokens.fontSize.xs,
-    color: tokens.colors.textTertiary,
+    color: 'var(--text-tertiary)',
   },
   rewardValue: {
     fontSize: tokens.fontSize.xs,
-    color: tokens.colors.accent,
+    color: 'var(--accent)',
     fontWeight: tokens.fontWeight.bold,
   },
   completeTag: {
     fontSize: tokens.fontSize.xs,
-    color: tokens.colors.success,
+    color: 'var(--green)',
     fontWeight: tokens.fontWeight.bold,
     marginLeft: 'auto',
   },
   loadingText: {
-    color: tokens.colors.textTertiary,
+    color: 'var(--text-tertiary)',
     fontSize: tokens.fontSize.sm,
     margin: 0,
   },
   noChallenge: {
-    color: tokens.colors.textTertiary,
+    color: 'var(--text-tertiary)',
     fontSize: tokens.fontSize.sm,
     margin: 0,
     marginBottom: tokens.spacing.md,
   },
   startBtn: {
-    background: tokens.colors.accentSubtle,
-    color: tokens.colors.accent,
+    background: 'var(--accent-light)',
+    color: 'var(--accent)',
     border: 'none',
     borderRadius: tokens.radius.md,
     padding: `${tokens.spacing.sm}px ${tokens.spacing.lg}px`,

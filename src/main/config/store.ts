@@ -6,6 +6,7 @@ export interface ConfigSchema {
   summarizationProvider: string;
   summarizationModel: string;
   language: string;
+  theme: 'dark' | 'light';
   ollamaUrl: string;
   ethicalNotifications: boolean;
   notificationIntervalMin: number;
@@ -30,6 +31,7 @@ const store = new Store<ConfigSchema>({
     summarizationProvider: 'ollama',
     summarizationModel: '',
     language: 'auto',
+    theme: 'dark',
     ollamaUrl: 'http://localhost:11434',
     ethicalNotifications: true,
     notificationIntervalMin: 10,

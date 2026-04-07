@@ -136,7 +136,7 @@ export function GlobalChat() {
         {isEmpty && (
           <div style={styles.emptyState}>
             <div style={styles.emptyIcon}>
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={tokens.colors.textTertiary} strokeWidth="1.5">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={'var(--text-tertiary)'} strokeWidth="1.5">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
               </svg>
             </div>
@@ -266,11 +266,11 @@ const styles: Record<string, React.CSSProperties> = {
   title: {
     fontSize: tokens.fontSize.xxl,
     fontWeight: tokens.fontWeight.bold,
-    color: tokens.colors.text,
+    color: 'var(--text-primary)',
   },
   subtitle: {
     fontSize: tokens.fontSize.sm,
-    color: tokens.colors.textTertiary,
+    color: 'var(--text-tertiary)',
     marginTop: 2,
   },
   clearBtn: {
@@ -280,9 +280,9 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '6px 12px',
     fontSize: tokens.fontSize.xs,
     fontWeight: tokens.fontWeight.medium,
-    color: tokens.colors.textTertiary,
+    color: 'var(--text-tertiary)',
     background: 'none',
-    border: `1px solid ${tokens.colors.borderSubtle}`,
+    border: `1px solid ${'var(--border-light)'}`,
     borderRadius: tokens.radius.sm,
     cursor: 'pointer',
     fontFamily: 'var(--font)',
@@ -308,12 +308,12 @@ const styles: Record<string, React.CSSProperties> = {
   emptyTitle: {
     fontSize: tokens.fontSize.xl,
     fontWeight: tokens.fontWeight.semibold,
-    color: tokens.colors.text,
+    color: 'var(--text-primary)',
     marginBottom: 6,
   },
   emptySubtitle: {
     fontSize: tokens.fontSize.md,
-    color: tokens.colors.textTertiary,
+    color: 'var(--text-tertiary)',
     marginBottom: tokens.spacing.xl,
     maxWidth: 400,
   },
@@ -328,9 +328,9 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '12px 16px',
     fontSize: tokens.fontSize.md,
     fontWeight: tokens.fontWeight.medium,
-    color: tokens.colors.textSecondary,
-    background: tokens.colors.bgSurface,
-    border: `1px solid ${tokens.colors.borderSubtle}`,
+    color: 'var(--text-secondary)',
+    background: 'var(--bg-card)',
+    border: `1px solid ${'var(--border-light)'}`,
     borderRadius: tokens.radius.lg,
     cursor: 'pointer',
     fontFamily: 'var(--font)',
@@ -353,14 +353,14 @@ const styles: Record<string, React.CSSProperties> = {
     wordBreak: 'break-word',
   },
   userBubble: {
-    background: tokens.colors.accent,
+    background: 'var(--accent)',
     color: 'white',
     borderBottomRightRadius: 4,
   },
   assistantBubble: {
-    background: tokens.colors.bgSurface,
-    border: `1px solid ${tokens.colors.borderSubtle}`,
-    color: tokens.colors.text,
+    background: 'var(--bg-card)',
+    border: `1px solid ${'var(--border-light)'}`,
+    color: 'var(--text-primary)',
     borderBottomLeftRadius: 4,
   },
   messageText: {
@@ -378,7 +378,7 @@ const styles: Record<string, React.CSSProperties> = {
     width: 6,
     height: 6,
     borderRadius: '50%',
-    background: tokens.colors.textTertiary,
+    background: 'var(--text-tertiary)',
     animation: 'chatTypingPulse 1s ease-in-out infinite',
   },
   errorBubble: {
@@ -386,20 +386,20 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '10px 14px',
     borderRadius: 16,
     borderBottomLeftRadius: 4,
-    background: tokens.colors.dangerSubtle,
-    border: `1px solid ${tokens.colors.danger}`,
+    background: 'var(--red-light)',
+    border: `1px solid ${'var(--red)'}`,
   },
   errorText: {
     fontSize: tokens.fontSize.sm,
     lineHeight: 1.5,
     margin: 0,
-    color: tokens.colors.danger,
+    color: 'var(--red)',
   },
   inputBar: {
     display: 'flex',
     gap: 8,
     paddingTop: tokens.spacing.md,
-    borderTop: `1px solid ${tokens.colors.borderSubtle}`,
+    borderTop: `1px solid ${'var(--border-light)'}`,
     marginTop: tokens.spacing.sm,
     flexShrink: 0,
   },
@@ -408,10 +408,10 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '12px 16px',
     fontSize: tokens.fontSize.md,
     fontFamily: 'var(--font)',
-    border: `1px solid ${tokens.colors.border}`,
+    border: `1px solid ${'var(--border)'}`,
     borderRadius: tokens.radius.lg,
-    background: tokens.colors.bgSurface,
-    color: tokens.colors.text,
+    background: 'var(--bg-card)',
+    color: 'var(--text-primary)',
     outline: 'none',
     transition: `border-color ${tokens.transition.fast}`,
   },
@@ -422,7 +422,7 @@ const styles: Record<string, React.CSSProperties> = {
     width: 44,
     height: 44,
     borderRadius: tokens.radius.lg,
-    background: tokens.colors.accent,
+    background: 'var(--accent)',
     color: 'white',
     border: 'none',
     cursor: 'pointer',

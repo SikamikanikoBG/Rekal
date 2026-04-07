@@ -124,7 +124,7 @@ export function GlobalTasks({ onViewMeeting }: Props) {
       <div style={styles.content}>
         {filtered.length === 0 ? (
           <div style={styles.emptyState}>
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={tokens.colors.textTertiary} strokeWidth="1.5">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={'var(--text-tertiary)'} strokeWidth="1.5">
               <path d="M9 11l3 3L22 4" />
               <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
             </svg>
@@ -225,11 +225,11 @@ const styles: Record<string, React.CSSProperties> = {
   title: {
     fontSize: tokens.fontSize.xxl,
     fontWeight: tokens.fontWeight.bold,
-    color: tokens.colors.text,
+    color: 'var(--text-primary)',
   },
   subtitle: {
     fontSize: tokens.fontSize.sm,
-    color: tokens.colors.textTertiary,
+    color: 'var(--text-tertiary)',
     marginTop: 4,
   },
   filterBar: {
@@ -243,17 +243,17 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     gap: 2,
-    background: tokens.colors.bgSurface,
+    background: 'var(--bg-card)',
     borderRadius: tokens.radius.md,
     padding: 2,
-    border: `1px solid ${tokens.colors.borderSubtle}`,
+    border: `1px solid ${'var(--border-light)'}`,
   },
   filterBtn: {
     padding: '6px 12px',
     fontSize: tokens.fontSize.xs,
     fontWeight: tokens.fontWeight.medium,
     fontFamily: 'var(--font)',
-    color: tokens.colors.textSecondary,
+    color: 'var(--text-secondary)',
     background: 'transparent',
     border: 'none',
     borderRadius: tokens.radius.sm,
@@ -261,12 +261,12 @@ const styles: Record<string, React.CSSProperties> = {
     transition: `all ${tokens.transition.fast}`,
   },
   filterBtnActive: {
-    background: tokens.colors.accent,
+    background: 'var(--accent)',
     color: 'white',
   },
   sortLabel: {
     fontSize: tokens.fontSize.xs,
-    color: tokens.colors.textTertiary,
+    color: 'var(--text-tertiary)',
     padding: '0 8px',
   },
   content: {
@@ -285,12 +285,12 @@ const styles: Record<string, React.CSSProperties> = {
   emptyTitle: {
     fontSize: tokens.fontSize.lg,
     fontWeight: tokens.fontWeight.semibold,
-    color: tokens.colors.text,
+    color: 'var(--text-primary)',
     marginTop: tokens.spacing.lg,
   },
   emptySubtitle: {
     fontSize: tokens.fontSize.sm,
-    color: tokens.colors.textTertiary,
+    color: 'var(--text-tertiary)',
     marginTop: 4,
   },
   group: {
@@ -302,27 +302,27 @@ const styles: Record<string, React.CSSProperties> = {
     gap: 8,
     width: '100%',
     padding: `${tokens.spacing.sm}px ${tokens.spacing.md}px`,
-    background: tokens.colors.bgSurface,
-    border: `1px solid ${tokens.colors.borderSubtle}`,
+    background: 'var(--bg-card)',
+    border: `1px solid ${'var(--border-light)'}`,
     borderRadius: tokens.radius.md,
     cursor: 'pointer',
     fontFamily: 'var(--font)',
-    color: tokens.colors.textSecondary,
+    color: 'var(--text-secondary)',
     fontSize: tokens.fontSize.sm,
     fontWeight: tokens.fontWeight.semibold,
   },
   groupTitle: {
     flex: 1,
     textAlign: 'left' as const,
-    color: tokens.colors.text,
+    color: 'var(--text-primary)',
   },
   groupDate: {
     fontSize: tokens.fontSize.xs,
-    color: tokens.colors.textTertiary,
+    color: 'var(--text-tertiary)',
   },
   groupTasks: {
     marginLeft: tokens.spacing.lg,
-    borderLeft: `2px solid ${tokens.colors.borderSubtle}`,
+    borderLeft: `2px solid ${'var(--border-light)'}`,
     paddingLeft: tokens.spacing.md,
     marginTop: 4,
   },
@@ -338,7 +338,7 @@ const styles: Record<string, React.CSSProperties> = {
     width: 20,
     height: 20,
     borderRadius: 4,
-    border: `2px solid ${tokens.colors.border}`,
+    border: `2px solid ${'var(--border)'}`,
     flexShrink: 0,
     display: 'flex',
     alignItems: 'center',
@@ -350,17 +350,17 @@ const styles: Record<string, React.CSSProperties> = {
     padding: 0,
   },
   checkboxDone: {
-    background: tokens.colors.success,
-    borderColor: tokens.colors.success,
+    background: 'var(--green)',
+    borderColor: 'var(--green)',
   },
   taskText: {
     fontSize: tokens.fontSize.md,
-    color: tokens.colors.text,
+    color: 'var(--text-primary)',
     lineHeight: 1.5,
   },
   meetingLink: {
     fontSize: tokens.fontSize.xs,
-    color: tokens.colors.accent,
+    color: 'var(--accent)',
     background: 'none',
     border: 'none',
     padding: 0,

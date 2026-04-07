@@ -79,7 +79,7 @@ export function Timeline({ onViewMeeting }: Props) {
       {/* Search + Filters */}
       <div style={styles.filterRow}>
         <div style={styles.searchWrap}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={tokens.colors.textTertiary} strokeWidth="2">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={'var(--text-tertiary)'} strokeWidth="2">
             <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
           </svg>
           <input
@@ -110,7 +110,7 @@ export function Timeline({ onViewMeeting }: Props) {
       <div style={styles.timeline}>
         {filtered.length === 0 ? (
           <div style={styles.emptyState}>
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={tokens.colors.textTertiary} strokeWidth="1.5">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={'var(--text-tertiary)'} strokeWidth="1.5">
               <circle cx="12" cy="12" r="10" />
               <polyline points="12 6 12 12 16 14" />
             </svg>
@@ -162,7 +162,7 @@ export function Timeline({ onViewMeeting }: Props) {
                           )}
                           <svg
                             width="14" height="14" viewBox="0 0 24 24" fill="none"
-                            stroke={tokens.colors.textTertiary} strokeWidth="2"
+                            stroke={'var(--text-tertiary)'} strokeWidth="2"
                             style={{ transform: isExpanded ? 'rotate(180deg)' : 'none', transition: `transform ${tokens.transition.fast}` }}
                           >
                             <path d="m6 9 6 6 6-6" />
@@ -269,7 +269,7 @@ const styles: Record<string, React.CSSProperties> = {
   title: {
     fontSize: tokens.fontSize.xxl,
     fontWeight: tokens.fontWeight.bold,
-    color: tokens.colors.text,
+    color: 'var(--text-primary)',
   },
   filterRow: {
     display: 'flex',
@@ -283,8 +283,8 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     gap: 8,
     padding: '8px 12px',
-    background: tokens.colors.bgSurface,
-    border: `1px solid ${tokens.colors.borderSubtle}`,
+    background: 'var(--bg-card)',
+    border: `1px solid ${'var(--border-light)'}`,
     borderRadius: tokens.radius.md,
   },
   searchInput: {
@@ -294,22 +294,22 @@ const styles: Record<string, React.CSSProperties> = {
     background: 'transparent',
     fontSize: tokens.fontSize.md,
     fontFamily: 'var(--font)',
-    color: tokens.colors.text,
+    color: 'var(--text-primary)',
   },
   dateFilters: {
     display: 'flex',
     gap: 2,
-    background: tokens.colors.bgSurface,
+    background: 'var(--bg-card)',
     borderRadius: tokens.radius.md,
     padding: 2,
-    border: `1px solid ${tokens.colors.borderSubtle}`,
+    border: `1px solid ${'var(--border-light)'}`,
   },
   dateBtn: {
     padding: '6px 12px',
     fontSize: tokens.fontSize.xs,
     fontWeight: tokens.fontWeight.medium,
     fontFamily: 'var(--font)',
-    color: tokens.colors.textSecondary,
+    color: 'var(--text-secondary)',
     background: 'transparent',
     border: 'none',
     borderRadius: tokens.radius.sm,
@@ -318,7 +318,7 @@ const styles: Record<string, React.CSSProperties> = {
     whiteSpace: 'nowrap' as const,
   },
   dateBtnActive: {
-    background: tokens.colors.accent,
+    background: 'var(--accent)',
     color: 'white',
   },
   timeline: {
@@ -336,12 +336,12 @@ const styles: Record<string, React.CSSProperties> = {
   emptyTitle: {
     fontSize: tokens.fontSize.lg,
     fontWeight: tokens.fontWeight.semibold,
-    color: tokens.colors.text,
+    color: 'var(--text-primary)',
     marginTop: tokens.spacing.lg,
   },
   emptySubtitle: {
     fontSize: tokens.fontSize.sm,
-    color: tokens.colors.textTertiary,
+    color: 'var(--text-tertiary)',
     marginTop: 4,
   },
   group: {
@@ -358,14 +358,14 @@ const styles: Record<string, React.CSSProperties> = {
     width: 10,
     height: 10,
     borderRadius: '50%',
-    background: tokens.colors.accent,
+    background: 'var(--accent)',
     flexShrink: 0,
     marginLeft: -5,
   },
   dateMarkerText: {
     fontSize: tokens.fontSize.sm,
     fontWeight: tokens.fontWeight.bold,
-    color: tokens.colors.text,
+    color: 'var(--text-primary)',
     textTransform: 'uppercase' as const,
     letterSpacing: '0.05em',
   },
@@ -380,7 +380,7 @@ const styles: Record<string, React.CSSProperties> = {
     top: 0,
     bottom: 0,
     width: 2,
-    background: tokens.colors.borderSubtle,
+    background: 'var(--border-light)',
     marginLeft: -1,
   },
   timelineDot: {
@@ -390,12 +390,12 @@ const styles: Record<string, React.CSSProperties> = {
     width: 6,
     height: 6,
     borderRadius: '50%',
-    background: tokens.colors.textTertiary,
+    background: 'var(--text-tertiary)',
     marginLeft: -3,
   },
   cardContent: {
-    background: tokens.colors.bgSurface,
-    border: `1px solid ${tokens.colors.borderSubtle}`,
+    background: 'var(--bg-card)',
+    border: `1px solid ${'var(--border-light)'}`,
     borderRadius: tokens.radius.lg,
     padding: tokens.spacing.lg,
   },
@@ -408,7 +408,7 @@ const styles: Record<string, React.CSSProperties> = {
   cardTitle: {
     fontSize: tokens.fontSize.lg,
     fontWeight: tokens.fontWeight.semibold,
-    color: tokens.colors.text,
+    color: 'var(--text-primary)',
     background: 'none',
     border: 'none',
     padding: 0,
@@ -425,14 +425,14 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     gap: 6,
     fontSize: tokens.fontSize.xs,
-    color: tokens.colors.textTertiary,
+    color: 'var(--text-tertiary)',
     marginTop: 2,
   },
   metaDot: {
     width: 3,
     height: 3,
     borderRadius: '50%',
-    background: tokens.colors.textTertiary,
+    background: 'var(--text-tertiary)',
   },
   badges: {
     display: 'flex',
@@ -448,14 +448,14 @@ const styles: Record<string, React.CSSProperties> = {
   },
   preview: {
     fontSize: tokens.fontSize.sm,
-    color: tokens.colors.textSecondary,
+    color: 'var(--text-secondary)',
     marginTop: tokens.spacing.sm,
     lineHeight: 1.5,
   },
   expanded: {
     marginTop: tokens.spacing.md,
     paddingTop: tokens.spacing.md,
-    borderTop: `1px solid ${tokens.colors.borderSubtle}`,
+    borderTop: `1px solid ${'var(--border-light)'}`,
   },
   expandedSection: {
     marginBottom: tokens.spacing.md,
@@ -463,14 +463,14 @@ const styles: Record<string, React.CSSProperties> = {
   expandedLabel: {
     fontSize: tokens.fontSize.xs,
     fontWeight: tokens.fontWeight.semibold,
-    color: tokens.colors.textTertiary,
+    color: 'var(--text-tertiary)',
     textTransform: 'uppercase' as const,
     letterSpacing: '0.05em',
     marginBottom: 6,
   },
   expandedText: {
     fontSize: tokens.fontSize.md,
-    color: tokens.colors.text,
+    color: 'var(--text-primary)',
     lineHeight: 1.6,
   },
   expandedList: {
@@ -482,7 +482,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   expandedListItem: {
     fontSize: tokens.fontSize.sm,
-    color: tokens.colors.text,
+    color: 'var(--text-primary)',
     lineHeight: 1.5,
     paddingLeft: 12,
     position: 'relative' as const,
@@ -494,7 +494,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: tokens.fontSize.sm,
     fontWeight: tokens.fontWeight.medium,
     fontFamily: 'var(--font)',
-    color: tokens.colors.accent,
+    color: 'var(--accent)',
     background: 'none',
     border: 'none',
     padding: 0,
@@ -508,9 +508,9 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: tokens.fontSize.sm,
     fontWeight: tokens.fontWeight.medium,
     fontFamily: 'var(--font)',
-    color: tokens.colors.textSecondary,
-    background: tokens.colors.bgSurface,
-    border: `1px solid ${tokens.colors.borderSubtle}`,
+    color: 'var(--text-secondary)',
+    background: 'var(--bg-card)',
+    border: `1px solid ${'var(--border-light)'}`,
     borderRadius: tokens.radius.md,
     cursor: 'pointer',
     textAlign: 'center' as const,

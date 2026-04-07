@@ -12,29 +12,29 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<ButtonVariant, React.CSSProperties> = {
   primary: {
-    background: tokens.colors.accent,
+    background: 'var(--accent)',
     color: '#FFFFFF',
   },
   secondary: {
-    background: tokens.colors.bgSurfaceHover,
-    color: tokens.colors.text,
-    border: `1px solid ${tokens.colors.border}`,
+    background: 'var(--bg-hover)',
+    color: 'var(--text-primary)',
+    border: `1px solid ${'var(--border)'}`,
   },
   ghost: {
     background: 'transparent',
-    color: tokens.colors.textSecondary,
+    color: 'var(--text-secondary)',
   },
   danger: {
-    background: tokens.colors.dangerSubtle,
-    color: tokens.colors.danger,
+    background: 'var(--red-light)',
+    color: 'var(--red)',
   },
 };
 
 const variantHoverStyles: Record<ButtonVariant, React.CSSProperties> = {
-  primary: { background: tokens.colors.accentHover },
-  secondary: { background: tokens.colors.bgSurfaceActive, borderColor: tokens.colors.border },
-  ghost: { background: tokens.colors.bgSurfaceHover, color: tokens.colors.text },
-  danger: { background: tokens.colors.danger, color: '#FFFFFF' },
+  primary: { background: 'var(--accent-hover)' },
+  secondary: { background: 'var(--bg-active)', borderColor: 'var(--border)' },
+  ghost: { background: 'var(--bg-hover)', color: 'var(--text-primary)' },
+  danger: { background: 'var(--red)', color: '#FFFFFF' },
 };
 
 const sizeStyles: Record<ButtonSize, React.CSSProperties> = {

@@ -11,24 +11,24 @@ interface BadgeProps {
 
 const variantStyles: Record<BadgeVariant, React.CSSProperties> = {
   default: {
-    background: tokens.colors.bgSurfaceHover,
-    color: tokens.colors.textSecondary,
+    background: 'var(--bg-hover)',
+    color: 'var(--text-secondary)',
   },
   accent: {
-    background: tokens.colors.accentSubtle,
-    color: tokens.colors.accent,
+    background: 'var(--accent-light)',
+    color: 'var(--accent)',
   },
   success: {
-    background: tokens.colors.successSubtle,
-    color: tokens.colors.success,
+    background: 'var(--green-light)',
+    color: 'var(--green)',
   },
   warning: {
-    background: tokens.colors.warningSubtle,
-    color: tokens.colors.warning,
+    background: 'var(--orange-light)',
+    color: 'var(--orange)',
   },
   danger: {
-    background: tokens.colors.dangerSubtle,
-    color: tokens.colors.danger,
+    background: 'var(--red-light)',
+    color: 'var(--red)',
   },
 };
 

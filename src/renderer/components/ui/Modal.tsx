@@ -38,8 +38,8 @@ export function Modal({ open, onClose, title, children, width = 440 }: ModalProp
       <div
         className="fade-in"
         style={{
-          background: tokens.colors.bgSurface,
-          border: `1px solid ${tokens.colors.border}`,
+          background: 'var(--bg-card)',
+          border: `1px solid ${'var(--border)'}`,
           borderRadius: tokens.radius.xl,
           boxShadow: tokens.shadow.lg,
           width,
@@ -57,10 +57,10 @@ export function Modal({ open, onClose, title, children, width = 440 }: ModalProp
               alignItems: 'center',
               justifyContent: 'space-between',
               padding: `${tokens.spacing.lg}px ${tokens.spacing.xl}px`,
-              borderBottom: `1px solid ${tokens.colors.borderSubtle}`,
+              borderBottom: `1px solid ${'var(--border-light)'}`,
             }}
           >
-            <h3 style={{ fontSize: tokens.fontSize.xl, fontWeight: tokens.fontWeight.semibold, color: tokens.colors.text }}>
+            <h3 style={{ fontSize: tokens.fontSize.xl, fontWeight: tokens.fontWeight.semibold, color: 'var(--text-primary)' }}>
               {title}
             </h3>
             <button
@@ -68,7 +68,7 @@ export function Modal({ open, onClose, title, children, width = 440 }: ModalProp
               style={{
                 background: 'none',
                 border: 'none',
-                color: tokens.colors.textTertiary,
+                color: 'var(--text-tertiary)',
                 cursor: 'pointer',
                 padding: 4,
                 display: 'flex',

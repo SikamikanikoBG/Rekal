@@ -17,7 +17,7 @@ export function Input({ label, error, size = 'md', style, ...props }: InputProps
           style={{
             fontSize: tokens.fontSize.xs,
             fontWeight: tokens.fontWeight.semibold,
-            color: tokens.colors.textSecondary,
+            color: 'var(--text-secondary)',
             textTransform: 'uppercase',
             letterSpacing: '0.04em',
           }}
@@ -30,9 +30,9 @@ export function Input({ label, error, size = 'md', style, ...props }: InputProps
           padding: isSmall ? '6px 10px' : '8px 12px',
           fontSize: isSmall ? tokens.fontSize.sm : tokens.fontSize.md,
           fontFamily: 'var(--font)',
-          background: tokens.colors.bg,
-          color: tokens.colors.text,
-          border: `1px solid ${error ? tokens.colors.danger : tokens.colors.border}`,
+          background: 'var(--bg)',
+          color: 'var(--text-primary)',
+          border: `1px solid ${error ? 'var(--red)' : 'var(--border)'}`,
           borderRadius: tokens.radius.md,
           outline: 'none',
           transition: `border-color ${tokens.transition.fast}`,
@@ -42,7 +42,7 @@ export function Input({ label, error, size = 'md', style, ...props }: InputProps
         {...props}
       />
       {error && (
-        <span style={{ fontSize: tokens.fontSize.xs, color: tokens.colors.danger }}>
+        <span style={{ fontSize: tokens.fontSize.xs, color: 'var(--red)' }}>
           {error}
         </span>
       )}

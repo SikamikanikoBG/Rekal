@@ -8,6 +8,7 @@ interface SidebarProps {
   onNavigate: (item: NavItem) => void;
   collapsed?: boolean;
   onToggleCollapse?: () => void;
+  managedMode?: boolean;
 }
 
 interface NavEntry {
@@ -105,10 +106,18 @@ interface SidebarStats {
   progress: number;
 }
 
-export function Sidebar({ active, onNavigate, collapsed = false, onToggleCollapse }: SidebarProps) {
+export function Sidebar({ active, onNavigate, collapsed = false, onToggleCollapse, managedMode = false }: SidebarProps) {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [sidebarStats, setSidebarStats] = useState<SidebarStats | null>(null);
+  const [isDark, setIsDark] = useState(() => !document.documentElement.classList.contains('light'));
   const width = collapsed ? 56 : 200;
+
+  async function toggleTheme() {
+    const next = isDark ? 'light' : 'dark';
+    setIsDark(!isDark);
+    document.documentElement.classList.toggle('light', next === 'light');
+    await window.api.setConfig({ theme: next });
+  }
 
   useEffect(() => {
     window.api.gamification.getStats()
@@ -126,7 +135,7 @@ export function Sidebar({ active, onNavigate, collapsed = false, onToggleCollaps
   }, [active]); // Refresh when nav changes
 
   const topItems = navItems.filter((n) => !n.bottom);
-  const bottomItems = navItems.filter((n) => n.bottom);
+  const bottomItems = navItems.filter((n) => n.bottom && !(managedMode && n.id === 'settings'));
 
   return (
     <div style={{ ...styles.sidebar, width }}>
@@ -134,27 +143,41 @@ export function Sidebar({ active, onNavigate, collapsed = false, onToggleCollaps
       <div style={styles.logoArea}>
         {!collapsed && (
           <div style={styles.logoText}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={tokens.colors.accent} strokeWidth="2">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2">
               <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
               <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
               <line x1="12" y1="19" x2="12" y2="22" />
             </svg>
-            <span style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold, color: tokens.colors.text }}>
+            <span style={{ fontSize: tokens.fontSize.lg, fontWeight: tokens.fontWeight.bold, color: 'var(--text-primary)' }}>
               Rekal
             </span>
           </div>
         )}
-        <button
-          style={styles.collapseBtn}
-          onClick={onToggleCollapse}
-          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-            style={{ transform: collapsed ? 'rotate(180deg)' : 'none', transition: `transform ${tokens.transition.normal}` }}>
-            <path d="m11 17-5-5 5-5" />
-            <path d="m18 17-5-5 5-5" />
-          </svg>
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <button style={styles.collapseBtn} onClick={toggleTheme} title={isDark ? 'Switch to light' : 'Switch to dark'}>
+            {isDark ? (
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="4" />
+                <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+              </svg>
+            ) : (
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+              </svg>
+            )}
+          </button>
+          <button
+            style={styles.collapseBtn}
+            onClick={onToggleCollapse}
+            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+              style={{ transform: collapsed ? 'rotate(180deg)' : 'none', transition: `transform ${tokens.transition.normal}` }}>
+              <path d="m11 17-5-5 5-5" />
+              <path d="m18 17-5-5 5-5" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* Main nav */}
@@ -228,12 +251,12 @@ function NavButton({ item, active, collapsed, hovered, onHoverStart, onHoverEnd,
   onClick: () => void;
 }) {
   const bg = active
-    ? tokens.colors.accentSubtle
+    ? 'var(--accent-light)'
     : hovered
-      ? tokens.colors.bgSurfaceHover
+      ? 'var(--bg-hover)'
       : 'transparent';
 
-  const color = active ? tokens.colors.accent : hovered ? tokens.colors.text : tokens.colors.textSecondary;
+  const color = active ? 'var(--accent)' : hovered ? 'var(--text-primary)' : 'var(--text-secondary)';
 
   return (
     <button
@@ -270,7 +293,7 @@ function NavButton({ item, active, collapsed, hovered, onHoverStart, onHoverEnd,
           transform: collapsed ? 'translateX(-50%)' : 'translateY(-50%)',
           width: collapsed ? 16 : 3,
           height: collapsed ? 3 : 16,
-          background: tokens.colors.accent,
+          background: 'var(--accent)',
           borderRadius: tokens.radius.full,
         }} />
       )}
@@ -287,8 +310,8 @@ const styles: Record<string, React.CSSProperties> = {
     height: '100%',
     display: 'flex',
     flexDirection: 'column',
-    background: tokens.colors.bgSurface,
-    borderRight: `1px solid ${tokens.colors.borderSubtle}`,
+    background: 'var(--bg-surface)',
+    borderRight: '1px solid var(--border-light)',
     transition: `width ${tokens.transition.normal}`,
     flexShrink: 0,
     overflow: 'hidden',
@@ -309,7 +332,7 @@ const styles: Record<string, React.CSSProperties> = {
   collapseBtn: {
     background: 'none',
     border: 'none',
-    color: tokens.colors.textTertiary,
+    color: 'var(--text-tertiary)',
     cursor: 'pointer',
     padding: 4,
     borderRadius: tokens.radius.sm,
@@ -335,7 +358,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   divider: {
     height: 1,
-    background: tokens.colors.borderSubtle,
+    background: 'var(--border-light)',
     margin: `${tokens.spacing.sm}px 0`,
   },
   statsPlaceholder: {
@@ -344,14 +367,14 @@ const styles: Record<string, React.CSSProperties> = {
     gap: 10,
     padding: `${tokens.spacing.md}px ${tokens.spacing.md}px`,
     marginTop: tokens.spacing.sm,
-    background: tokens.colors.bg,
+    background: 'var(--bg)',
     borderRadius: tokens.radius.md,
   },
   levelBadge: {
     width: 28,
     height: 28,
     borderRadius: tokens.radius.full,
-    background: tokens.colors.accentSubtle,
+    background: 'var(--accent-light)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -360,29 +383,29 @@ const styles: Record<string, React.CSSProperties> = {
   levelNumber: {
     fontSize: tokens.fontSize.sm,
     fontWeight: tokens.fontWeight.bold,
-    color: tokens.colors.accent,
+    color: 'var(--accent)',
   },
   statsTitle: {
     fontSize: tokens.fontSize.xs,
     fontWeight: tokens.fontWeight.semibold,
-    color: tokens.colors.textSecondary,
+    color: 'var(--text-secondary)',
     marginBottom: 4,
   },
   xpBar: {
     height: 3,
-    background: tokens.colors.border,
+    background: 'var(--border)',
     borderRadius: tokens.radius.full,
     overflow: 'hidden',
   },
   xpFill: {
     height: '100%',
-    background: tokens.colors.accent,
+    background: 'var(--accent)',
     borderRadius: tokens.radius.full,
     transition: `width ${tokens.transition.slow}`,
   },
   xpText: {
     fontSize: tokens.fontSize.xs,
-    color: tokens.colors.textTertiary,
+    color: 'var(--text-tertiary)',
     margin: 0,
     marginTop: 2,
   },
