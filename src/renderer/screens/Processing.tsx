@@ -23,7 +23,14 @@ export function Processing({ audioPath, onComplete, onError }: Props) {
   const [progress, setProgress] = useState(0);
   const [statusText, setStatusText] = useState('Starting transcription...');
   const [error, setError] = useState('');
+  const [managedMode, setManagedMode] = useState(false);
   const [providerInfo, setProviderInfo] = useState({ tProvider: '', tModel: '', sProvider: '', sModel: '' });
+
+  useEffect(() => {
+    window.api.getManagedMode().then((source: string) => {
+      setManagedMode(source === 'file' || source === 'remote');
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     run();
@@ -102,7 +109,11 @@ export function Processing({ audioPath, onComplete, onError }: Props) {
         <div style={styles.card} className="fade-in">
           <div style={styles.errorIcon}>!</div>
           <h3 style={styles.errorTitle}>Something went wrong</h3>
-          <p style={styles.errorText}>{error}</p>
+          <p style={styles.errorText}>
+            {managedMode
+              ? 'Could not connect to the service. Please contact your IT administrator.'
+              : error}
+          </p>
           <button className="btn btn-primary" onClick={onError} style={{ marginTop: 16 }}>
             Back to home
           </button>
