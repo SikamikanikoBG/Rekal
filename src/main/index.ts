@@ -1,11 +1,11 @@
-import { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, shell, session } from 'electron';
+import { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, shell, session, dialog } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
 import { ChildProcess, fork } from 'child_process';
 import { scanDependencies } from './setup/scanner';
 import { installMissing } from './setup/installer';
-import { initDatabase, saveMeeting, getMeeting, getMeetings, searchMeetings, saveChatMessage, getChatMessages, clearChatMessages, getDashboardStats, getAllTasks, updateMeetingNotes, saveUsageCost, getMeetingCosts, getCostSummary } from './storage/db';
-import { getNewRecordingPath } from './audio/recorder';
+import { initDatabase, saveMeeting, getMeeting, getMeetings, searchMeetings, saveChatMessage, getChatMessages, clearChatMessages, getDashboardStats, getAllTasks, updateMeetingNotes, saveUsageCost, getMeetingCosts, getCostSummary, saveFailedSession, getFailedSessions, deleteFailedSession } from './storage/db';
+import { getNewRecordingPath, getRecordingsDir } from './audio/recorder';
 import { registry } from './providers';
 import { getConfig, setConfig, setApiKey } from './config/store';
 import { ScanResult, Meeting, CostInfo } from '../shared/types';
@@ -194,6 +194,28 @@ function registerIpcHandlers(): void {
     return filePath;
   });
 
+  ipcMain.handle('transcribe-chunk', async (_event, data: number[], language: string) => {
+    const tmpPath = path.join(getRecordingsDir(), `chunk_${Date.now()}.wav`);
+    try {
+      fs.writeFileSync(tmpPath, Buffer.from(data));
+      const config = getConfig();
+      const providerId = config.transcriptionProvider || 'haiper-proxy';
+      const provider = registry.getTranscription(providerId);
+      const transcript = await provider.transcribe({
+        audioPath: tmpPath,
+        model: config.transcriptionModel || '',
+        language,
+        onProgress: () => {},
+      });
+      return transcript.segments.map((s: any) => s.text).join(' ').trim();
+    } catch (e) {
+      logger.warn('Chunk transcription failed', { error: (e as Error).message });
+      return '';
+    } finally {
+      try { fs.unlinkSync(tmpPath); } catch {}
+    }
+  });
+
   // ── Ethical TTS Notifications ──
 
   ipcMain.handle('tts:recording-started', async () => {
@@ -327,6 +349,27 @@ function registerIpcHandlers(): void {
     return result;
   });
 
+  // ── Failed Sessions ──
+
+  ipcMain.handle('failed-sessions:save', async (_event, session: { id: string; audioPath: string; transcript: any; failedStep: string; errorMessage: string }) => {
+    saveFailedSession({
+      id: session.id,
+      audioPath: session.audioPath,
+      transcript: session.transcript || null,
+      failedStep: session.failedStep as 'transcription' | 'summarization',
+      errorMessage: session.errorMessage,
+    });
+  });
+
+  ipcMain.handle('failed-sessions:get-all', async () => {
+    return getFailedSessions();
+  });
+
+  ipcMain.handle('failed-sessions:delete', async (_event, id: string) => {
+    validateId(id, 'sessionId');
+    deleteFailedSession(id);
+  });
+
   // ── Dashboard Stats ──
 
   ipcMain.handle('dashboard:stats', async () => {
@@ -451,6 +494,16 @@ ${meetingContext || '(No meetings recorded yet)'}`;
   ipcMain.handle('open-mailto', async (_event, subject: string, body: string) => {
     const mailto = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     await shell.openExternal(mailto);
+  });
+
+  ipcMain.handle('save-text-file', async (_event, content: string, defaultName: string) => {
+    const { filePath, canceled } = await dialog.showSaveDialog({
+      defaultPath: defaultName,
+      filters: [{ name: 'Text Files', extensions: ['txt'] }],
+    });
+    if (canceled || !filePath) return { saved: false };
+    fs.writeFileSync(filePath, content, 'utf-8');
+    return { saved: true, filePath };
   });
 
   // ── Ollama URL ──

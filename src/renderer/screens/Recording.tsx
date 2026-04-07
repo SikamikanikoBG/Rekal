@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { MicButton } from '../components/MicButton';
 import { Waveform } from '../components/Waveform';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 
 interface Props {
-  onStop: (audioPath: string, duration: number) => void;
+  onStop: (audioPath: string, duration: number, transcript: string) => void;
   onCancel: () => void;
 }
 
@@ -12,11 +12,38 @@ export function Recording({ onStop, onCancel }: Props) {
   const { isRecording, duration, audioLevel, startRecording, stopRecording, error } = useAudioRecorder();
   const [bookmarks, setBookmarks] = useState<number[]>([]);
   const [stopping, setStopping] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
+
+  // Sequential chunk queue — ensures transcript parts stay in order
+  const transcriptPartsRef = useRef<string[]>([]);
+  const chunkQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const languageRef = useRef<string>('bg-BG');
 
   useEffect(() => {
-    // Announce first, then start recording so the TTS doesn't get captured
+    window.api.getConfig().then((cfg: any) => {
+      languageRef.current = cfg.language || 'bg-BG';
+    }).catch(() => {});
+  }, []);
+
+  function enqueueChunk(wav: Blob) {
+    setTranscribing(true);
+    chunkQueueRef.current = chunkQueueRef.current.then(async () => {
+      try {
+        const buffer = await wav.arrayBuffer();
+        const text = await window.api.transcribeChunk(
+          Array.from(new Uint8Array(buffer)),
+          languageRef.current
+        );
+        if (text) transcriptPartsRef.current.push(text);
+      } catch (e) {
+        console.warn('Chunk transcription error:', e);
+      }
+    });
+  }
+
+  useEffect(() => {
     window.api.tts.recordingStarted().finally(() => {
-      startRecording();
+      startRecording(enqueueChunk);
     });
   }, []);
 
@@ -36,17 +63,21 @@ export function Recording({ onStop, onCancel }: Props) {
   async function handleStop() {
     if (stopping) return;
     setStopping(true);
-    // Ethical notification: announce recording stopped
     window.api.tts.recordingStopped();
     try {
-      const blob = await stopRecording();
-      // Save blob to file via IPC
+      const blob = await stopRecording(); // also dispatches final chunk via onChunk
+
+      // Wait for all queued chunk transcriptions to finish
+      await chunkQueueRef.current;
+      setTranscribing(false);
+
       const buffer = await blob.arrayBuffer();
       const audioPath = await window.api.saveAudioBlob(
         Array.from(new Uint8Array(buffer)),
         blob.type
       );
-      onStop(audioPath, duration);
+      const transcript = transcriptPartsRef.current.join(' ').trim();
+      onStop(audioPath, duration, transcript);
     } catch (e) {
       console.error('Failed to stop recording:', e);
       onCancel();
@@ -92,6 +123,13 @@ export function Recording({ onStop, onCancel }: Props) {
 
         {/* Waveform */}
         <Waveform audioLevel={audioLevel} />
+
+        {/* Live transcription indicator */}
+        {transcribing && (
+          <p style={{ fontSize: 12, color: 'var(--text-tertiary)', margin: 0 }}>
+            Transcribing...
+          </p>
+        )}
 
         {/* Controls */}
         <div style={styles.controls}>

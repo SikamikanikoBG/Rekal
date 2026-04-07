@@ -41,6 +41,8 @@ contextBridge.exposeInMainWorld('api', {
   getDesktopSources: () => ipcRenderer.invoke('get-desktop-sources'),
   saveAudioBlob: (data: number[], mimeType: string) =>
     ipcRenderer.invoke('save-audio-blob', data, mimeType),
+  transcribeChunk: (data: number[], language: string) =>
+    ipcRenderer.invoke('transcribe-chunk', data, language),
 
   // Transcription (provider-based)
   transcribe: (providerId: string, audioPath: string, model: string, language: string) =>
@@ -66,6 +68,7 @@ contextBridge.exposeInMainWorld('api', {
 
   // Export
   openMailto: (subject: string, body: string) => ipcRenderer.invoke('open-mailto', subject, body),
+  saveTextFile: (content: string, defaultName: string) => ipcRenderer.invoke('save-text-file', content, defaultName),
 
   // Tray
   onStartRecording: (cb: () => void) => {
@@ -120,6 +123,14 @@ contextBridge.exposeInMainWorld('api', {
       ipcRenderer.invoke('costs:save', record),
     forMeeting: (meetingId: string) => ipcRenderer.invoke('costs:meeting', meetingId),
     summary: () => ipcRenderer.invoke('costs:summary'),
+  },
+
+  // Failed Sessions
+  failedSessions: {
+    save: (session: { id: string; audioPath: string; transcript: any; failedStep: string; errorMessage: string }) =>
+      ipcRenderer.invoke('failed-sessions:save', session),
+    getAll: () => ipcRenderer.invoke('failed-sessions:get-all'),
+    delete: (id: string) => ipcRenderer.invoke('failed-sessions:delete', id),
   },
 
   // Managed config mode

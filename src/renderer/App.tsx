@@ -31,13 +31,15 @@ export interface AppState {
   language: string;
   // Recording
   audioPath: string | null;
-  transcript: any | null;
+  transcript: any | null; // can be { prebuilt: true, text: string } during processing, or full transcript after
   notes: any | null;
   recordingDuration: number;
   // Meeting
   currentMeetingId: string | null;
   meetingTitle: string | null;
   meetingDate: string | null;
+  // Failed session retry
+  failedSessionId: string | null;
 }
 
 declare global {
@@ -95,6 +97,7 @@ export default function App() {
     currentMeetingId: null,
     meetingTitle: null,
     meetingDate: null,
+    failedSessionId: null,
   });
 
   const setScreen = (screen: Screen) => setState((s) => ({ ...s, screen }));
@@ -132,6 +135,18 @@ export default function App() {
       try { await window.api.gamification.awardXP('MEETING_RECORDED', id); } catch (_) {}
     } catch (e) { console.error('Failed to save meeting:', e); }
     update({ screen: 'results', transcript, notes, currentMeetingId: id, meetingTitle: title, meetingDate: date });
+  }
+
+  function handleRetryFailedSession(session: { id: string; audioPath: string; transcript: any; failedStep: string }) {
+    update({
+      screen: 'processing',
+      audioPath: session.audioPath,
+      recordingDuration: 0,
+      failedSessionId: session.id,
+      transcript: session.transcript
+        ? { prebuilt: true, text: session.transcript.segments?.map((s: any) => s.text).join(' ').trim() || '' }
+        : null,
+    });
   }
 
   async function handleViewMeeting(id: string) {
@@ -217,15 +232,17 @@ export default function App() {
             )}
             {state.screen === 'recording' && (
               <Recording
-                onStop={(audioPath, duration) => update({ screen: 'processing', audioPath, recordingDuration: duration })}
+                onStop={(audioPath, duration, transcript) => update({ screen: 'processing', audioPath, recordingDuration: duration, transcript: transcript ? { prebuilt: true, text: transcript } : null })}
                 onCancel={() => setScreen('dashboard')}
               />
             )}
             {state.screen === 'processing' && (
               <Processing
                 audioPath={state.audioPath!}
+                prebuiltTranscript={state.transcript?.prebuilt ? state.transcript.text : undefined}
+                failedSessionId={state.failedSessionId || undefined}
                 onComplete={handleProcessingComplete}
-                onError={() => setScreen('dashboard')}
+                onError={() => update({ screen: 'dashboard', activeNav: 'dashboard', failedSessionId: null })}
               />
             )}
           </>
@@ -259,6 +276,7 @@ export default function App() {
                 <Dashboard
                   onStartRecording={() => setScreen('recording')}
                   onViewMeeting={handleViewMeeting}
+                  onRetryFailedSession={handleRetryFailedSession}
                 />
               )}
               {state.screen === 'tasks' && (

@@ -120,6 +120,19 @@ export function initDatabase(): void {
     )
   `);
 
+  // ── Failed Sessions ──
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS failed_sessions (
+      id TEXT PRIMARY KEY,
+      audio_path TEXT NOT NULL,
+      transcript TEXT,
+      failed_step TEXT NOT NULL,
+      error_message TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    )
+  `);
+
   // Initialize user_stats row if not present
   const existingUser = db.prepare('SELECT id FROM user_stats WHERE id = ?').get('local_user');
   if (!existingUser) {
@@ -420,4 +433,47 @@ function rowToMeeting(row: Record<string, unknown>): Meeting {
     bookmarks: JSON.parse((row.bookmarks as string) || '[]'),
     template: (row.template as string) || undefined,
   };
+}
+
+// ── Failed Sessions ──
+
+export interface FailedSession {
+  id: string;
+  audioPath: string;
+  transcript: any | null;
+  failedStep: 'transcription' | 'summarization';
+  errorMessage: string;
+  createdAt: string;
+}
+
+export function saveFailedSession(session: Omit<FailedSession, 'createdAt'>): void {
+  if (!db) throw new Error('Database not initialized');
+  db.prepare(`
+    INSERT OR REPLACE INTO failed_sessions (id, audio_path, transcript, failed_step, error_message)
+    VALUES (?, ?, ?, ?, ?)
+  `).run(
+    session.id,
+    session.audioPath,
+    session.transcript ? JSON.stringify(session.transcript) : null,
+    session.failedStep,
+    session.errorMessage,
+  );
+}
+
+export function getFailedSessions(): FailedSession[] {
+  if (!db) throw new Error('Database not initialized');
+  const rows = db.prepare('SELECT * FROM failed_sessions ORDER BY created_at DESC').all() as Array<Record<string, unknown>>;
+  return rows.map((row) => ({
+    id: row.id as string,
+    audioPath: row.audio_path as string,
+    transcript: row.transcript ? JSON.parse(row.transcript as string) : null,
+    failedStep: row.failed_step as 'transcription' | 'summarization',
+    errorMessage: row.error_message as string,
+    createdAt: row.created_at as string,
+  }));
+}
+
+export function deleteFailedSession(id: string): void {
+  if (!db) throw new Error('Database not initialized');
+  db.prepare('DELETE FROM failed_sessions WHERE id = ?').run(id);
 }

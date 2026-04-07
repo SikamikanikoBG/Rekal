@@ -4,9 +4,19 @@ import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { LangPickerModal } from '../components/LangPickerModal';
 
+interface FailedSession {
+  id: string;
+  audioPath: string;
+  transcript: any | null;
+  failedStep: 'transcription' | 'summarization';
+  errorMessage: string;
+  createdAt: string;
+}
+
 interface Props {
   onStartRecording: () => void;
   onViewMeeting: (id: string) => void;
+  onRetryFailedSession: (session: FailedSession) => void;
 }
 
 interface DashboardStats {
@@ -35,7 +45,7 @@ interface CostSummaryData {
   allTime: { total: number; stt: number; llm: number };
 }
 
-export function Dashboard({ onStartRecording, onViewMeeting }: Props) {
+export function Dashboard({ onStartRecording, onViewMeeting, onRetryFailedSession }: Props) {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [gamification, setGamification] = useState<GamificationData | null>(null);
   const [challenge, setChallenge] = useState<ChallengeData | null>(null);
@@ -44,6 +54,7 @@ export function Dashboard({ onStartRecording, onViewMeeting }: Props) {
   const [costSummary, setCostSummary] = useState<CostSummaryData | null>(null);
   const [costExpanded, setCostExpanded] = useState(false);
   const [showLangPicker, setShowLangPicker] = useState(false);
+  const [failedSessions, setFailedSessions] = useState<FailedSession[]>([]);
 
   useEffect(() => {
     window.api.dashboard.getStats().then(setStats).catch(() => {});
@@ -54,7 +65,13 @@ export function Dashboard({ onStartRecording, onViewMeeting }: Props) {
       setTasks(all.filter((t: any) => !t.done).slice(0, 5));
     }).catch(() => {});
     window.api.costs.summary().then(setCostSummary).catch(() => {});
+    window.api.failedSessions.getAll().then(setFailedSessions).catch(() => {});
   }, []);
+
+  async function handleDismissFailedSession(id: string) {
+    await window.api.failedSessions.delete(id).catch(() => {});
+    setFailedSessions((prev) => prev.filter((s) => s.id !== id));
+  }
 
   const level = gamification?.levelInfo?.level ?? 1;
   const title = gamification?.levelInfo?.title ?? 'Intern';
@@ -76,6 +93,32 @@ export function Dashboard({ onStartRecording, onViewMeeting }: Props) {
         </svg>
         Start Recording
       </button>
+
+      {/* Failed Sessions */}
+      {failedSessions.length > 0 && (
+        <div style={styles.failedList}>
+          {failedSessions.map((s) => (
+            <div key={s.id} style={styles.failedItem}>
+              <div style={styles.failedIcon}>!</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={styles.failedTitle}>
+                  {s.failedStep === 'summarization' ? 'Notes failed' : 'Transcription failed'}
+                  <span style={styles.failedDate}> · {new Date(s.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                </p>
+                <p style={styles.failedError}>{s.errorMessage}</p>
+              </div>
+              <div style={styles.failedActions}>
+                <button className="btn btn-primary" style={{ fontSize: 12, padding: '4px 12px' }} onClick={() => onRetryFailedSession(s)}>
+                  Retry
+                </button>
+                <button className="btn btn-ghost" style={{ fontSize: 12, padding: '4px 8px' }} onClick={() => handleDismissFailedSession(s.id)} title="Dismiss">
+                  ✕
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Stats Row */}
       <div style={styles.statsRow}>
@@ -250,6 +293,13 @@ function formatDuration(seconds: number): string {
 }
 
 const styles: Record<string, React.CSSProperties> = {
+  failedList: { display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 },
+  failedItem: { display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: 'var(--red-light)', borderRadius: 'var(--radius)', border: '1px solid var(--red)' },
+  failedIcon: { width: 28, height: 28, borderRadius: '50%', background: 'var(--red)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, flexShrink: 0 },
+  failedTitle: { fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', margin: 0 },
+  failedDate: { fontWeight: 400, color: 'var(--text-secondary)' },
+  failedError: { fontSize: 12, color: 'var(--text-secondary)', margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
+  failedActions: { display: 'flex', gap: 6, flexShrink: 0 },
   container: {
     gap: 0,
     overflowY: 'auto',

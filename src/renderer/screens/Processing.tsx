@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 interface CostInfo {
   provider: string;
@@ -12,19 +12,24 @@ interface CostInfo {
 
 interface Props {
   audioPath: string;
+  prebuiltTranscript?: string;
+  failedSessionId?: string;
   onComplete: (transcript: any, notes: any, costInfos?: CostInfo[]) => void;
   onError: () => void;
 }
 
 type Step = 'transcribing' | 'summarizing' | 'done';
 
-export function Processing({ audioPath, onComplete, onError }: Props) {
+export function Processing({ audioPath, prebuiltTranscript, failedSessionId, onComplete, onError }: Props) {
   const [step, setStep] = useState<Step>('transcribing');
   const [progress, setProgress] = useState(0);
   const [statusText, setStatusText] = useState('Starting transcription...');
   const [error, setError] = useState('');
+  const [failedStep, setFailedStep] = useState<'transcription' | 'summarization' | null>(null);
   const [managedMode, setManagedMode] = useState(false);
   const [providerInfo, setProviderInfo] = useState({ tProvider: '', tModel: '', sProvider: '', sModel: '' });
+  const transcriptRef = useRef<any>(null);
+  const costInfosRef = useRef<CostInfo[]>([]);
 
   useEffect(() => {
     window.api.getManagedMode().then((source: string) => {
@@ -33,10 +38,12 @@ export function Processing({ audioPath, onComplete, onError }: Props) {
   }, []);
 
   useEffect(() => {
-    run();
+    run(false);
   }, []);
 
-  async function run() {
+  async function run(skipTranscription = false) {
+    setError('');
+    setFailedStep(null);
     try {
       // Read providers from config
       const cfg = await window.api.getConfig();
@@ -47,28 +54,49 @@ export function Processing({ audioPath, onComplete, onError }: Props) {
       const language = cfg.language || 'auto';
       setProviderInfo({ tProvider: transcriptionProvider, tModel: transcriptionModel, sProvider: summarizationProvider, sModel: summarizationModel });
 
-      // Step 1: Transcribe
-      const cleanupTranscript = window.api.onTranscriptionProgress(
-        (data: { percent: number; text: string }) => {
-          setProgress(data.percent);
-          setStatusText(data.text || 'Transcribing...');
+      // Step 1: Transcribe (skip if already done during recording or retrying summarization)
+      const costInfos: CostInfo[] = [...costInfosRef.current];
+      let transcriptResult: any;
+
+      if (skipTranscription && transcriptRef.current) {
+        transcriptResult = { success: true, transcript: transcriptRef.current };
+      } else if (prebuiltTranscript) {
+        setStep('transcribing');
+        setProgress(100);
+        setStatusText('Transcription ready');
+        transcriptResult = {
+          success: true,
+          transcript: { segments: [{ start: 0, end: 0, text: prebuiltTranscript }], language, duration: 0 },
+        };
+      } else {
+        setStep('transcribing');
+        setProgress(0);
+        setStatusText('Starting transcription...');
+        const cleanupTranscript = window.api.onTranscriptionProgress(
+          (data: { percent: number; text: string }) => {
+            setProgress(data.percent);
+            setStatusText(data.text || 'Transcribing...');
+          }
+        );
+        transcriptResult = await window.api.transcribe(
+          transcriptionProvider, audioPath, transcriptionModel, language
+        );
+        cleanupTranscript();
+
+        if (!transcriptResult.success) {
+          const errMsg = transcriptResult.error || 'Transcription failed';
+          setFailedStep('transcription');
+          setError(errMsg);
+          const sid = failedSessionId || crypto.randomUUID();
+          await window.api.failedSessions.save({ id: sid, audioPath, transcript: null, failedStep: 'transcription', errorMessage: errMsg });
+          return;
         }
-      );
-
-      const transcriptResult = await window.api.transcribe(
-        transcriptionProvider, audioPath, transcriptionModel, language
-      );
-      cleanupTranscript();
-
-      if (!transcriptResult.success) {
-        setError(transcriptResult.error || 'Transcription failed');
-        return;
+        if (transcriptResult.costInfo) costInfos.push(transcriptResult.costInfo);
       }
 
-      const costInfos: CostInfo[] = [];
-      if (transcriptResult.costInfo) {
-        costInfos.push(transcriptResult.costInfo);
-      }
+      // Save transcript so retry can skip this step
+      transcriptRef.current = transcriptResult.transcript;
+      costInfosRef.current = costInfos;
 
       // Step 2: Summarize
       setStep('summarizing');
@@ -87,12 +115,21 @@ export function Processing({ audioPath, onComplete, onError }: Props) {
       cleanupSummary();
 
       if (!notesResult.success) {
-        setError(notesResult.error || 'Summarization failed');
+        const errMsg = notesResult.error || 'Summarization failed';
+        setFailedStep('summarization');
+        setError(errMsg);
+        const sid = failedSessionId || crypto.randomUUID();
+        await window.api.failedSessions.save({ id: sid, audioPath, transcript: transcriptResult.transcript, failedStep: 'summarization', errorMessage: errMsg });
         return;
       }
 
       if (notesResult.costInfo) {
         costInfos.push(notesResult.costInfo);
+      }
+
+      // Clean up failed session record if this was a retry
+      if (failedSessionId) {
+        window.api.failedSessions.delete(failedSessionId).catch(() => {});
       }
 
       setStep('done');
@@ -103,20 +140,48 @@ export function Processing({ audioPath, onComplete, onError }: Props) {
     }
   }
 
+  async function handleSaveTranscript() {
+    const transcript = transcriptRef.current;
+    if (!transcript) return;
+    const text = transcript.segments
+      ? transcript.segments.map((s: any) => s.text).join(' ').trim()
+      : String(transcript);
+    const date = new Date().toISOString().slice(0, 10);
+    await window.api.saveTextFile(text, `transcript-${date}.txt`);
+  }
+
   if (error) {
     return (
       <div className="screen-centered">
         <div style={styles.card} className="fade-in">
           <div style={styles.errorIcon}>!</div>
-          <h3 style={styles.errorTitle}>Something went wrong</h3>
+          <h3 style={styles.errorTitle}>
+            {failedStep === 'summarization' ? 'Notes generation failed' : 'Something went wrong'}
+          </h3>
           <p style={styles.errorText}>
             {managedMode
               ? 'Could not connect to the service. Please contact your IT administrator.'
               : error}
           </p>
-          <button className="btn btn-primary" onClick={onError} style={{ marginTop: 16 }}>
-            Back to home
-          </button>
+          <div style={styles.errorActions}>
+            {failedStep === 'summarization' ? (
+              <>
+                <button className="btn btn-primary" onClick={() => run(true)}>
+                  Try again
+                </button>
+                <button className="btn btn-secondary" onClick={handleSaveTranscript}>
+                  Save transcript
+                </button>
+                <button className="btn btn-ghost" onClick={onError} style={{ fontSize: 13 }}>
+                  Back to home
+                </button>
+              </>
+            ) : (
+              <button className="btn btn-primary" onClick={onError}>
+                Back to home
+              </button>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -138,7 +203,9 @@ export function Processing({ audioPath, onComplete, onError }: Props) {
         </div>
         <p style={styles.hint}>
           {step === 'transcribing'
-            ? `Transcribing with ${providerInfo.tProvider} (${providerInfo.tModel})...`
+            ? prebuiltTranscript
+              ? 'Transcript ready from live recording'
+              : `Transcribing with ${providerInfo.tProvider} (${providerInfo.tModel})...`
             : `Generating notes with ${providerInfo.sProvider} (${providerInfo.sModel})...`}
         </p>
       </div>
@@ -174,4 +241,5 @@ const styles: Record<string, React.CSSProperties> = {
   errorIcon: { width: 48, height: 48, borderRadius: '50%', background: 'var(--red-light)', color: 'var(--red)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 700 },
   errorTitle: { fontSize: 16, fontWeight: 600, marginTop: 8 },
   errorText: { fontSize: 13, color: 'var(--text-secondary)', textAlign: 'center', maxWidth: 320, lineHeight: 1.5 },
+  errorActions: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, marginTop: 16 },
 };
