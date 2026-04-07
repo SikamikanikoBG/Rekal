@@ -14,7 +14,7 @@ export class HaiperTranscriptionProvider implements TranscriptionProvider {
     req.onProgress?.(10, 'Uploading to hAIper...');
 
     const audioData = fs.readFileSync(req.audioPath);
-    const lang = req.language === 'auto' ? 'en-US' : req.language;
+    const lang = req.language || 'auto';
     const filename = req.audioPath.split(/[\\/]/).pop() || 'audio.wav';
 
     // Build multipart/form-data manually
@@ -49,14 +49,10 @@ export class HaiperTranscriptionProvider implements TranscriptionProvider {
 
     const data = await res.json() as { transcript: string; status: string };
 
-    if (!data.transcript) {
-      throw new Error(`Transcription returned no text (status: ${data.status})`);
-    }
-
     req.onProgress?.(100, 'Done');
 
     return {
-      segments: [{ start: 0, end: 0, text: data.transcript }],
+      segments: data.transcript ? [{ start: 0, end: 0, text: data.transcript }] : [],
       language: lang.split('-')[0],
       duration: 0,
     };
