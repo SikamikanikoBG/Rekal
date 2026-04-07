@@ -38,6 +38,7 @@ contextBridge.exposeInMainWorld('api', {
   checkOllama: () => ipcRenderer.invoke('check-ollama'),
 
   // Audio
+  getDesktopSources: () => ipcRenderer.invoke('get-desktop-sources'),
   saveAudioBlob: (data: number[], mimeType: string) =>
     ipcRenderer.invoke('save-audio-blob', data, mimeType),
 
@@ -120,6 +121,9 @@ contextBridge.exposeInMainWorld('api', {
     forMeeting: (meetingId: string) => ipcRenderer.invoke('costs:meeting', meetingId),
     summary: () => ipcRenderer.invoke('costs:summary'),
   },
+
+  // Managed config mode
+  getManagedMode: () => ipcRenderer.invoke('get-managed-mode'),
 
   // MCP Server
   mcp: {
