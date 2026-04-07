@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback } from 'react';
 
 interface UseAudioRecorderResult {
   isRecording: boolean;
@@ -10,9 +10,9 @@ interface UseAudioRecorderResult {
 }
 
 /**
- * Records microphone audio and produces a WAV blob (16kHz mono PCM).
- * Uses ScriptProcessorNode to capture raw PCM directly — no webm, no conversion needed.
- * WAV is what whisper.cpp expects.
+ * Records microphone + system audio (WASAPI loopback via desktopCapturer) mixed together.
+ * Falls back to microphone-only if system audio capture is unavailable.
+ * Produces a 16kHz mono WAV blob.
  */
 export function useAudioRecorder(): UseAudioRecorderResult {
   const [isRecording, setIsRecording] = useState(false);
@@ -20,9 +20,9 @@ export function useAudioRecorder(): UseAudioRecorderResult {
   const [audioLevel, setAudioLevel] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
-  const streamRef = useRef<MediaStream | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const processorRef = useRef<ScriptProcessorNode | null>(null);
+  const streamsRef = useRef<MediaStream[]>([]);
   const chunksRef = useRef<Float32Array[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval>>();
   const startTimeRef = useRef(0);
@@ -31,42 +31,59 @@ export function useAudioRecorder(): UseAudioRecorderResult {
     setError(null);
     setDuration(0);
     chunksRef.current = [];
+    streamsRef.current = [];
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          channelCount: 1,
-        },
+      // ── Microphone ──────────────────────────────────────────────────────────
+      const micStream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, channelCount: 1 },
       });
-      streamRef.current = stream;
+      streamsRef.current.push(micStream);
 
-      // Create audio context at 16kHz (what whisper expects)
+      // ── System audio (loopback) ─────────────────────────────────────────────
+      let systemStream: MediaStream | null = null;
+      try {
+        const sources = await window.api.getDesktopSources();
+        if (sources.length > 0) {
+          const constraints: any = {
+            audio: { mandatory: { chromeMediaSource: 'desktop' } },
+            video: { mandatory: { chromeMediaSource: 'desktop', chromeMediaSourceId: sources[0].id } },
+          };
+          const desktopStream = await navigator.mediaDevices.getUserMedia(constraints);
+          // Drop video tracks — we only want the audio
+          desktopStream.getVideoTracks().forEach((t) => t.stop());
+          systemStream = new MediaStream(desktopStream.getAudioTracks());
+          streamsRef.current.push(systemStream);
+        }
+      } catch (sysErr) {
+        // System audio unavailable — continue with mic only
+        console.warn('System audio capture unavailable, using mic only:', sysErr);
+      }
+
+      // ── Mix streams ─────────────────────────────────────────────────────────
       const audioCtx = new AudioContext({ sampleRate: 16000 });
       audioCtxRef.current = audioCtx;
 
-      const source = audioCtx.createMediaStreamSource(stream);
-
-      // Use ScriptProcessorNode to capture raw PCM samples
       const processor = audioCtx.createScriptProcessor(4096, 1, 1);
       processorRef.current = processor;
 
       processor.onaudioprocess = (e) => {
         const inputData = e.inputBuffer.getChannelData(0);
-        // Copy the buffer (it gets reused)
         chunksRef.current.push(new Float32Array(inputData));
 
-        // Calculate audio level for waveform
         let sum = 0;
-        for (let i = 0; i < inputData.length; i++) {
-          sum += inputData[i] * inputData[i];
-        }
-        const rms = Math.sqrt(sum / inputData.length);
-        setAudioLevel(Math.min(1, rms * 3));
+        for (let i = 0; i < inputData.length; i++) sum += inputData[i] * inputData[i];
+        setAudioLevel(Math.min(1, Math.sqrt(sum / inputData.length) * 3));
       };
 
-      source.connect(processor);
+      // Connect mic
+      audioCtx.createMediaStreamSource(micStream).connect(processor);
+
+      // Connect system audio if available
+      if (systemStream) {
+        audioCtx.createMediaStreamSource(systemStream).connect(processor);
+      }
+
       processor.connect(audioCtx.destination);
 
       startTimeRef.current = Date.now();
@@ -94,12 +111,11 @@ export function useAudioRecorder(): UseAudioRecorderResult {
 
       clearInterval(timerRef.current);
 
-      // Disconnect audio processing
       processorRef.current?.disconnect();
       audioCtxRef.current?.close();
-      streamRef.current?.getTracks().forEach((t) => t.stop());
+      streamsRef.current.forEach((s) => s.getTracks().forEach((t) => t.stop()));
+      streamsRef.current = [];
 
-      // Merge all chunks into a single Float32Array
       const totalLength = chunksRef.current.reduce((acc, c) => acc + c.length, 0);
       const merged = new Float32Array(totalLength);
       let offset = 0;
@@ -108,7 +124,6 @@ export function useAudioRecorder(): UseAudioRecorderResult {
         offset += chunk.length;
       }
 
-      // Encode as WAV
       const wavBlob = encodeWav(merged, 16000);
       chunksRef.current = [];
 
@@ -122,9 +137,6 @@ export function useAudioRecorder(): UseAudioRecorderResult {
   return { isRecording, duration, audioLevel, startRecording, stopRecording, error };
 }
 
-/**
- * Encodes Float32 PCM samples into a WAV file blob (16-bit PCM).
- */
 function encodeWav(samples: Float32Array, sampleRate: number): Blob {
   const numChannels = 1;
   const bitsPerSample = 16;
@@ -133,26 +145,20 @@ function encodeWav(samples: Float32Array, sampleRate: number): Blob {
   const buffer = new ArrayBuffer(44 + dataLength);
   const view = new DataView(buffer);
 
-  // RIFF header
   writeString(view, 0, 'RIFF');
   view.setUint32(4, 36 + dataLength, true);
   writeString(view, 8, 'WAVE');
-
-  // fmt chunk
   writeString(view, 12, 'fmt ');
-  view.setUint32(16, 16, true);                          // chunk size
-  view.setUint16(20, 1, true);                            // PCM format
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
   view.setUint16(22, numChannels, true);
   view.setUint32(24, sampleRate, true);
   view.setUint32(28, sampleRate * numChannels * bytesPerSample, true);
   view.setUint16(32, numChannels * bytesPerSample, true);
   view.setUint16(34, bitsPerSample, true);
-
-  // data chunk
   writeString(view, 36, 'data');
   view.setUint32(40, dataLength, true);
 
-  // Convert float32 [-1,1] to int16
   let offset = 44;
   for (let i = 0; i < samples.length; i++) {
     const s = Math.max(-1, Math.min(1, samples[i]));
@@ -164,7 +170,5 @@ function encodeWav(samples: Float32Array, sampleRate: number): Blob {
 }
 
 function writeString(view: DataView, offset: number, str: string): void {
-  for (let i = 0; i < str.length; i++) {
-    view.setUint8(offset + i, str.charCodeAt(i));
-  }
+  for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
 }
