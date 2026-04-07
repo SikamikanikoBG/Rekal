@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { tokens } from '../styles/tokens';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
+import { LangPickerModal } from '../components/LangPickerModal';
 
 interface Props {
   onStartRecording: () => void;
@@ -42,6 +43,7 @@ export function Dashboard({ onStartRecording, onViewMeeting }: Props) {
   const [tasks, setTasks] = useState<any[]>([]);
   const [costSummary, setCostSummary] = useState<CostSummaryData | null>(null);
   const [costExpanded, setCostExpanded] = useState(false);
+  const [showLangPicker, setShowLangPicker] = useState(false);
 
   useEffect(() => {
     window.api.dashboard.getStats().then(setStats).catch(() => {});
@@ -61,8 +63,12 @@ export function Dashboard({ onStartRecording, onViewMeeting }: Props) {
 
   return (
     <div className="screen" style={styles.container}>
+      {showLangPicker && (
+        <LangPickerModal onConfirm={onStartRecording} onCancel={() => setShowLangPicker(false)} />
+      )}
+
       {/* Quick Record */}
-      <button onClick={onStartRecording} style={styles.recordBtn}>
+      <button onClick={() => setShowLangPicker(true)} style={styles.recordBtn}>
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
           <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
@@ -106,7 +112,7 @@ export function Dashboard({ onStartRecording, onViewMeeting }: Props) {
                         </div>
                       )}
                     </div>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={tokens.colors.textTertiary} strokeWidth="2">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={'var(--text-tertiary)'} strokeWidth="2">
                       <path d="m9 18 6-6-6-6" />
                     </svg>
                   </div>
@@ -219,7 +225,7 @@ export function Dashboard({ onStartRecording, onViewMeeting }: Props) {
 function StatCard({ label, value, subtitle, accent }: { label: string; value: number; subtitle?: string; accent?: boolean }) {
   return (
     <div style={styles.statCard}>
-      <p style={{ ...styles.statValue, color: accent ? tokens.colors.warning : tokens.colors.text }}>
+      <p style={{ ...styles.statValue, color: accent ? 'var(--orange)' : 'var(--text-primary)' }}>
         {value}
       </p>
       <p style={styles.statLabel}>{label}</p>
@@ -260,7 +266,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: tokens.fontWeight.semibold,
     fontFamily: 'var(--font)',
     color: 'white',
-    background: tokens.colors.accent,
+    background: 'var(--accent)',
     border: 'none',
     borderRadius: tokens.radius.lg,
     cursor: 'pointer',
@@ -274,8 +280,8 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: tokens.spacing.xl,
   },
   statCard: {
-    background: tokens.colors.bgSurface,
-    border: `1px solid ${tokens.colors.borderSubtle}`,
+    background: 'var(--bg-card)',
+    border: `1px solid ${'var(--border-light)'}`,
     borderRadius: tokens.radius.lg,
     padding: `${tokens.spacing.lg}px ${tokens.spacing.md}px`,
     textAlign: 'center' as const,
@@ -283,20 +289,20 @@ const styles: Record<string, React.CSSProperties> = {
   statValue: {
     fontSize: tokens.fontSize.xxxl,
     fontWeight: tokens.fontWeight.bold,
-    color: tokens.colors.text,
+    color: 'var(--text-primary)',
     fontFamily: 'var(--font-mono)',
     lineHeight: 1.2,
   },
   statLabel: {
     fontSize: tokens.fontSize.xs,
-    color: tokens.colors.textTertiary,
+    color: 'var(--text-tertiary)',
     marginTop: 4,
     textTransform: 'uppercase' as const,
     letterSpacing: '0.05em',
   },
   statSub: {
     fontSize: tokens.fontSize.xs,
-    color: tokens.colors.accent,
+    color: 'var(--accent)',
     marginTop: 2,
   },
   columns: {
@@ -320,12 +326,12 @@ const styles: Record<string, React.CSSProperties> = {
     padding: `${tokens.spacing.md}px ${tokens.spacing.lg}px`,
     cursor: 'pointer',
     transition: `background ${tokens.transition.fast}`,
-    borderBottom: `1px solid ${tokens.colors.borderSubtle}`,
+    borderBottom: `1px solid ${'var(--border-light)'}`,
   },
   meetingTitle: {
     fontSize: tokens.fontSize.md,
     fontWeight: tokens.fontWeight.medium,
-    color: tokens.colors.text,
+    color: 'var(--text-primary)',
     whiteSpace: 'nowrap' as const,
     overflow: 'hidden',
     textOverflow: 'ellipsis',
@@ -335,14 +341,14 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     gap: 6,
     fontSize: tokens.fontSize.xs,
-    color: tokens.colors.textTertiary,
+    color: 'var(--text-tertiary)',
     marginTop: 2,
   },
   dot: {
     width: 3,
     height: 3,
     borderRadius: '50%',
-    background: tokens.colors.textTertiary,
+    background: 'var(--text-tertiary)',
   },
   tagRow: {
     display: 'flex',
@@ -353,24 +359,24 @@ const styles: Record<string, React.CSSProperties> = {
   emptyText: {
     padding: `${tokens.spacing.xl}px ${tokens.spacing.lg}px`,
     fontSize: tokens.fontSize.sm,
-    color: tokens.colors.textTertiary,
+    color: 'var(--text-tertiary)',
     textAlign: 'center' as const,
   },
   challengeDesc: {
     fontSize: tokens.fontSize.md,
     fontWeight: tokens.fontWeight.medium,
-    color: tokens.colors.text,
+    color: 'var(--text-primary)',
     marginBottom: tokens.spacing.md,
   },
   progressBarBg: {
     height: 6,
-    background: tokens.colors.border,
+    background: 'var(--border)',
     borderRadius: tokens.radius.full,
     overflow: 'hidden',
   },
   progressBarFill: {
     height: '100%',
-    background: tokens.colors.accent,
+    background: 'var(--accent)',
     borderRadius: tokens.radius.full,
     transition: `width ${tokens.transition.slow}`,
   },
@@ -380,7 +386,7 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     marginTop: tokens.spacing.sm,
     fontSize: tokens.fontSize.xs,
-    color: tokens.colors.textSecondary,
+    color: 'var(--text-secondary)',
   },
   tasksList: {
     display: 'flex',
@@ -391,24 +397,24 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'flex-start',
     gap: 10,
     padding: `${tokens.spacing.sm}px ${tokens.spacing.lg}px`,
-    borderBottom: `1px solid ${tokens.colors.borderSubtle}`,
+    borderBottom: `1px solid ${'var(--border-light)'}`,
   },
   taskCheckbox: {
     width: 16,
     height: 16,
     borderRadius: 4,
-    border: `2px solid ${tokens.colors.border}`,
+    border: `2px solid ${'var(--border)'}`,
     flexShrink: 0,
     marginTop: 2,
   },
   taskText: {
     fontSize: tokens.fontSize.sm,
-    color: tokens.colors.text,
+    color: 'var(--text-primary)',
     lineHeight: 1.4,
   },
   taskMeeting: {
     fontSize: tokens.fontSize.xs,
-    color: tokens.colors.textTertiary,
+    color: 'var(--text-tertiary)',
     marginTop: 2,
   },
   levelRow: {
@@ -420,7 +426,7 @@ const styles: Record<string, React.CSSProperties> = {
     width: 36,
     height: 36,
     borderRadius: tokens.radius.full,
-    background: tokens.colors.accentSubtle,
+    background: 'var(--accent-light)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -429,17 +435,17 @@ const styles: Record<string, React.CSSProperties> = {
   levelNumber: {
     fontSize: tokens.fontSize.lg,
     fontWeight: tokens.fontWeight.bold,
-    color: tokens.colors.accent,
+    color: 'var(--accent)',
   },
   levelTitle: {
     fontSize: tokens.fontSize.sm,
     fontWeight: tokens.fontWeight.semibold,
-    color: tokens.colors.text,
+    color: 'var(--text-primary)',
     marginBottom: 6,
   },
   levelNext: {
     fontSize: tokens.fontSize.xs,
-    color: tokens.colors.textTertiary,
+    color: 'var(--text-tertiary)',
     marginTop: 4,
   },
   costGrid: {
@@ -454,11 +460,11 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: tokens.fontSize.sm,
   },
   costLabel: {
-    color: tokens.colors.textSecondary,
+    color: 'var(--text-secondary)',
   },
   costAmount: {
     fontFamily: 'var(--font-mono)',
-    color: tokens.colors.text,
+    color: 'var(--text-primary)',
   },
   costToggle: {
     display: 'flex',
@@ -466,9 +472,9 @@ const styles: Record<string, React.CSSProperties> = {
     justifyContent: 'space-between',
     marginTop: tokens.spacing.md,
     paddingTop: tokens.spacing.sm,
-    borderTop: `1px solid ${tokens.colors.borderSubtle}`,
+    borderTop: `1px solid ${'var(--border-light)'}`,
     cursor: 'pointer',
     fontSize: tokens.fontSize.xs,
-    color: tokens.colors.textTertiary,
+    color: 'var(--text-tertiary)',
   },
 };
