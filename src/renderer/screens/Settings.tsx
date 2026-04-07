@@ -29,6 +29,7 @@ export function Settings({ onSave, onBack }: Props) {
   const [selectedModel, setSelectedModel] = useState('');
   const [modelSaved, setModelSaved] = useState(false);
   const [ethicalNotifications, setEthicalNotifications] = useState(true);
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [notificationInterval, setNotificationInterval] = useState(10);
   // Default providers
   const [tProviders, setTProviders] = useState<{id:string;name:string}[]>([]);
@@ -42,18 +43,18 @@ export function Settings({ onSave, onBack }: Props) {
   const [sTestResult, setSTestResult] = useState<{valid:boolean;error?:string}|null>(null);
   const [tTesting, setTTesting] = useState(false);
   const [sTesting, setSTesting] = useState(false);
-  const [language, setLanguage] = useState('auto');
 
   useEffect(() => {
     window.api.getConfig().then((cfg: any) => {
       setKeys(cfg.apiKeys || {});
       setSelectedModel(cfg.summarizationModel || '');
       setEthicalNotifications(cfg.ethicalNotifications !== false);
+      setTheme(cfg.theme || 'dark');
       setNotificationInterval(cfg.notificationIntervalMin || 10);
       setTProvider(cfg.transcriptionProvider || 'whisper-local');
       setTModel(cfg.transcriptionModel || 'small');
       setSProvider(cfg.summarizationProvider || 'ollama');
-      setLanguage(cfg.language || 'auto');
+
     });
     window.api.getOllamaUrl().then((url: string) => setOllamaUrl(url));
     loadOllamaModels();
@@ -188,20 +189,6 @@ export function Settings({ onSave, onBack }: Props) {
             )}
           </div>
         </div>
-        <div style={styles.keyRow}>
-          <label style={styles.keyLabel}>Transcription Language</label>
-          <div style={styles.keyInputWrap}>
-            <select value={language} style={{ ...styles.keyInput, cursor: 'pointer' }}
-              onChange={async (e) => {
-                setLanguage(e.target.value);
-                await window.api.setConfig({ language: e.target.value });
-              }}>
-              <option value="auto">Auto-detect</option>
-              <option value="en-US">English</option>
-              <option value="bg-BG">Bulgarian</option>
-            </select>
-          </div>
-        </div>
       </Section>
 
       {/* Ollama */}
@@ -241,6 +228,26 @@ export function Settings({ onSave, onBack }: Props) {
               {ollamaTestResult.success ? `\u2713 ${ollamaTestResult.message}` : `\u2717 ${ollamaTestResult.message}`}
             </span>
           )}
+        </div>
+      </Section>
+
+      {/* Appearance */}
+      <Section title="Appearance" hint="">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <label style={{ fontSize: 13, fontWeight: 500 }}>Theme</label>
+          <select
+            style={{ ...styles.keyInput, cursor: 'pointer', width: 120 }}
+            value={theme}
+            onChange={async (e) => {
+              const val = e.target.value as 'dark' | 'light';
+              setTheme(val);
+              await window.api.setConfig({ theme: val });
+              document.documentElement.classList.toggle('light', val === 'light');
+            }}
+          >
+            <option value="dark">Dark</option>
+            <option value="light">Light</option>
+          </select>
         </div>
       </Section>
 
