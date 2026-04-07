@@ -157,6 +157,21 @@ export default function App() {
     update({ sidebarCollapsed: !state.sidebarCollapsed });
   }
 
+  const [managedMode, setManagedMode] = useState(false);
+
+  useEffect(() => {
+    window.api.getManagedMode().then((source: string) => {
+      setManagedMode(source === 'file' || source === 'remote');
+    }).catch(() => {});
+  }, []);
+
+  // Apply saved theme on load
+  useEffect(() => {
+    window.api.getConfig().then((cfg: any) => {
+      document.documentElement.classList.toggle('light', cfg.theme === 'light');
+    }).catch(() => {});
+  }, []);
+
   const [searchOpen, setSearchOpen] = useState(false);
 
   // Ctrl+K global shortcut for search
@@ -222,13 +237,14 @@ export default function App() {
               onNavigate={handleNavigate}
               collapsed={state.sidebarCollapsed}
               onToggleCollapse={handleToggleCollapse}
+              managedMode={managedMode}
             />
             <div style={layoutStyles.main}>
               {state.screen === 'idle' && (
                 <Idle
                   onStartRecording={() => setScreen('recording')}
                   onViewMeeting={handleViewMeeting}
-                  onOpenSettings={() => update({ screen: 'settings', activeNav: 'settings' })}
+                  onOpenSettings={managedMode ? undefined : () => update({ screen: 'settings', activeNav: 'settings' })}
                 />
               )}
               {state.screen === 'results' && (
@@ -257,7 +273,7 @@ export default function App() {
               {state.screen === 'achievements' && (
                 <Achievements />
               )}
-              {state.screen === 'settings' && (
+              {state.screen === 'settings' && !managedMode && (
                 <Settings
                   onSave={() => update({ screen: 'dashboard', activeNav: 'dashboard' })}
                   onBack={() => update({ screen: 'dashboard', activeNav: 'dashboard' })}
@@ -288,6 +304,6 @@ const layoutStyles: Record<string, React.CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     overflow: 'hidden',
-    background: tokens.colors.bg,
+    background: 'var(--bg)',
   },
 };
